@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // hashed with bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// status: "PENDING" | "APPROVED" | "REJECTED"
+model Menfes {
+  id          String    @id @default(uuid())
+  // Isi pesan menfes (tampil publik)
+  message     String
+  // Info pengirim — HANYA admin yang bisa lihat
+  senderName  String?   // nama samaran (opsional)
+  senderInfo  String?   // info tambahan (opsional)
+  // Status moderasi — SQLite tidak support enum, pakai String
+  status      String    @default("PENDING")
+  // Metadata
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  approvedAt  DateTime?
+  // IP hash untuk anti-spam (bukan IP asli)
+  ipHash      String?
+
+  @@index([status])
+  @@index([createdAt])
+}
