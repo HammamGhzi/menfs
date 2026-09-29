@@ -82,7 +82,7 @@ export default function ExportModal({ menfes, onClose }) {
     const lines = wrapText(ctx, menfes.message, maxTextW);
 
     const totalTextH = lines.length * lineHeight;
-    const textStartY = paperY + (paperH - totalTextH) / 2 + textPaddingY * 0.3;
+    const textStartY = paperY + (paperH - totalTextH) / 2 - textPaddingY * 1.4;
     const textStartX = paperX + textPaddingX;
 
     lines.forEach((line, i) => {
