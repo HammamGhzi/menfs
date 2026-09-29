@@ -17,7 +17,7 @@ function ProtectedRoute({ children }) {
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
     </div>
   );
-  return isLoggedIn ? children : <Navigate to="/admin/login" replace />;
+  return isLoggedIn ? children : <Navigate to="/4613a76adb4fb2dc/login" replace />;
 }
 
 function App() {
@@ -34,10 +34,10 @@ function App() {
         {/* Halaman publik */}
         <Route path="/" element={<HomePage />} />
 
-        {/* Admin */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
+        {/* Admin — URL tidak dipublikasikan */}
+        <Route path="/4613a76adb4fb2dc/login" element={<AdminLoginPage />} />
         <Route
-          path="/admin"
+          path="/4613a76adb4fb2dc"
           element={
             <ProtectedRoute>
               <AdminDashboardPage />

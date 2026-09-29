@@ -5,57 +5,143 @@
 @layer base {
   * {
     box-sizing: border-box;
+    /* Cegah elemen meluber keluar layar */
+    min-width: 0;
+  }
+
+  html {
+    /* Cegah horizontal scroll tak sengaja */
+    overflow-x: hidden;
+    /* Smooth scroll */
+    scroll-behavior: smooth;
+    /* Safe area iOS (notch/home indicator) */
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   body {
-    @apply font-sans antialiased bg-zinc-950 text-white;
+    /* Near-black background, parchment-tinted teks */
+    @apply font-sans antialiased bg-ink-800 text-parchment-200;
+    overflow-x: hidden;
+    /* Cegah teks terlalu kecil di mobile */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Touch action default */
+    touch-action: manipulation;
+  }
+
+  /* Semua gambar/video tidak meluber */
+  img, video, canvas, svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Input tidak zoom di iOS (font-size min 16px) */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+
+  /* Scrollbar — iras tema gelap */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  @media (min-width: 640px) {
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-800;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-600;
   }
 }
 
 @layer components {
+  /* ── Tombol utama: crimson ─────────────────────────────────────── */
   .btn-primary {
-    @apply bg-brand-700 hover:bg-brand-800 active:bg-brand-900 text-white font-semibold 
+    @apply bg-brand-700 hover:bg-brand-600 active:bg-brand-800 
+           text-parchment-100 font-semibold 
            py-3 px-6 rounded-xl transition-all duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-zinc-950;
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-ink-800;
   }
 
+  /* ── Tombol sekunder: ink ringan ───────────────────────────────── */
   .btn-secondary {
-    @apply bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-100 font-semibold 
-           py-3 px-6 rounded-xl border border-zinc-700 transition-all duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed
-           focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2;
+    @apply bg-ink-600 hover:bg-ink-500 active:bg-ink-700 
+           text-parchment-200 font-semibold 
+           py-3 px-6 rounded-xl border border-ink-500 transition-all duration-200 
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-parchment-400 focus:ring-offset-2 focus:ring-offset-ink-800;
   }
 
+  /* ── Tombol bahaya: merah tua lebih terang ─────────────────────── */
   .btn-danger {
-    @apply bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-semibold 
+    @apply bg-brand-700 hover:bg-brand-600 active:bg-brand-800 
+           text-parchment-100 font-semibold 
            py-2 px-4 rounded-lg transition-all duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed
-           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
   }
 
+  /* ── Tombol sukses: olive/hijau gelap ──────────────────────────── */
   .btn-success {
-    @apply bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold 
+    @apply bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-900 
+           text-parchment-100 font-semibold 
            py-2 px-4 rounded-lg transition-all duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed
-           focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2;
+           disabled:opacity-40 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
   }
 
+  /* ── Input field ────────────────────────────────────────────────── */
   .input-field {
-    @apply w-full border border-zinc-700 rounded-xl px-4 py-3 
-           bg-zinc-900 text-white
+    @apply w-full border border-ink-600 rounded-xl px-4 py-3 
+           bg-ink-700 text-parchment-200
            focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent
-           placeholder-zinc-500
+           placeholder-ink-400
            transition-all duration-200;
   }
 
-  /* Card versi dark */
+  /* ── Card utama: surface gelap sedikit terang dari background ─── */
   .card {
-    @apply bg-zinc-900 rounded-2xl border border-zinc-800 p-6;
+    @apply bg-ink-700 rounded-2xl border border-ink-600 p-6;
   }
 
-  /* Card versi light (untuk modal) */
-  .card-light {
-    @apply bg-white rounded-2xl border border-gray-100 p-6;
+  /* ── Card dengan aksen parchment (hover highlight) ─────────────── */
+  .card-parchment {
+    @apply bg-ink-700 rounded-2xl border border-parchment-800/30 p-6
+           hover:border-parchment-700/50 transition-colors;
+  }
+
+  /* ── Divider dengan teks ─────────────────────────────────────────  */
+  .divider-text {
+    @apply flex items-center gap-3;
+  }
+  .divider-text::before,
+  .divider-text::after {
+    content: '';
+    @apply flex-1 h-px bg-ink-600;
+  }
+
+  /* ── Badge status ────────────────────────────────────────────────  */
+  .badge-pending {
+    @apply bg-parchment-900/40 text-parchment-400 border border-parchment-700/30
+           text-xs font-mono px-2 py-0.5 rounded-full;
+  }
+  .badge-approved {
+    @apply bg-emerald-900/40 text-emerald-400 border border-emerald-700/30
+           text-xs font-mono px-2 py-0.5 rounded-full;
+  }
+  .badge-rejected {
+    @apply bg-brand-950/60 text-brand-400 border border-brand-800/30
+           text-xs font-mono px-2 py-0.5 rounded-full;
   }
 }

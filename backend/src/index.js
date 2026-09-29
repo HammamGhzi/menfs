@@ -8,6 +8,8 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const menfesRoutes = require('./routes/menfes');
 const adminRoutes = require('./routes/admin');
+const { router: telegramRouter, registerTelegramCallbacks } = require('./routes/telegram');
+const { initBot } = require('./services/telegramBot');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,8 +19,17 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: origin ${origin} tidak diizinkan.`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -33,7 +44,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ─── Global Rate Limit ────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: { error: 'Terlalu banyak request. Coba lagi nanti.' },
   standardHeaders: true,
@@ -45,12 +56,14 @@ app.use(globalLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/menfes', menfesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/telegram', telegramRouter);
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     app: 'Menfes Harkat Nekat',
+    telegram: !!process.env.TELEGRAM_BOT_TOKEN,
     timestamp: new Date().toISOString(),
   });
 });
@@ -64,15 +77,20 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.message);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Terjadi kesalahan server.' 
+    error: process.env.NODE_ENV === 'production'
+      ? 'Terjadi kesalahan server.'
       : err.message,
   });
 });
 
+// ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+
+  // Init Telegram bot setelah server jalan
+  initBot();
+  registerTelegramCallbacks();
 });
 
 module.exports = app;

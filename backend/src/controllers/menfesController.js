@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const crypto = require('crypto');
+const { notifyNewMenfes } = require('../services/telegramBot');
 
 const prisma = new PrismaClient();
 
@@ -14,7 +15,6 @@ function hashIp(ip) {
 /**
  * POST /api/menfes
  * Submit menfes baru (publik, anonim)
- * Pengirim bisa isi nama samaran (opsional) — hanya admin yang bisa lihat
  */
 async function submitMenfes(req, res) {
   try {
@@ -48,6 +48,11 @@ async function submitMenfes(req, res) {
       },
     });
 
+    // Kirim notifikasi Telegram ke admin (non-blocking — tidak ganggu response)
+    notifyNewMenfes(menfes).catch((err) =>
+      console.error('Telegram notif error (non-fatal):', err.message)
+    );
+
     // Response publik — JANGAN tampilkan info pengirim
     res.status(201).json({
       message: 'Menfes berhasil dikirim! Menunggu persetujuan admin.',
@@ -62,7 +67,6 @@ async function submitMenfes(req, res) {
 /**
  * GET /api/menfes
  * Ambil semua menfes yang sudah APPROVED (publik)
- * Tidak menampilkan info pengirim
  */
 async function getApprovedMenfes(req, res) {
   try {

@@ -5,9 +5,9 @@ import { adminAPI } from '../api';
 import ExportModal from '../components/ExportModal';
 
 const STATUS_TABS = [
-  { key: 'PENDING',  label: 'Menunggu',  emoji: '⏳', color: 'text-amber-400' },
-  { key: 'APPROVED', label: 'Disetujui', emoji: '✅', color: 'text-emerald-400' },
-  { key: 'REJECTED', label: 'Ditolak',   emoji: '❌', color: 'text-red-400' },
+  { key: 'PENDING',  label: 'Menunggu'  },
+  { key: 'APPROVED', label: 'Disetujui' },
+  { key: 'REJECTED', label: 'Ditolak'   },
 ];
 
 function formatDate(iso) {
@@ -15,6 +15,20 @@ function formatDate(iso) {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(new Date(iso));
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    PENDING:  { label: 'Menunggu',  cls: 'bg-amber-900/40 text-amber-400 border-amber-700/40' },
+    APPROVED: { label: 'Disetujui', cls: 'bg-emerald-900/40 text-emerald-400 border-emerald-700/40' },
+    REJECTED: { label: 'Ditolak',   cls: 'bg-brand-950/60 text-brand-400 border-brand-800/40' },
+  };
+  const { label, cls } = map[status] || map.PENDING;
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono border ${cls}`}>
+      {label}
+    </span>
+  );
 }
 
 export default function AdminDashboardPage() {
@@ -48,7 +62,7 @@ export default function AdminDashboardPage() {
     setActionLoading(id + '_approve');
     try {
       await adminAPI.approve(id);
-      toast.success('Menfess diapprove! ✅');
+      toast.success('Menfess diapprove!');
       loadData();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Gagal approve.');
@@ -79,155 +93,231 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      {/* Topbar */}
-      <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-extrabold text-white tracking-tight">
-              HARKAT <span className="text-brand-600">NEKATT</span>
-            </h1>
-            <p className="text-xs text-zinc-500 font-mono">DASHBOARD ADMIN</p>
+    <div className="min-h-screen bg-ink-800">
+
+      {/* ── Topbar ──────────────────────────────────────────────────── */}
+      <header className="bg-ink-900 border-b border-ink-700 sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-5 h-13 sm:h-14 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-7 h-7 bg-brand-700 rounded flex items-center justify-center shrink-0">
+              <span className="text-xs font-extrabold text-parchment-100 font-mono">HN</span>
+            </div>
+            <div className="min-w-0">
+              <span className="font-extrabold text-parchment-100 tracking-tight text-sm truncate block">
+                HARKAT <span className="text-brand-500">NEKATT</span>
+              </span>
+            </div>
+            <span className="text-ink-500 font-mono text-xs hidden sm:inline shrink-0">/ Admin</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-zinc-500 hidden sm:block font-mono">
-              {admin?.username}
-            </span>
+
+          {/* Right */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Username — sembunyikan di hp sangat kecil */}
+            <div className="hidden sm:flex items-center gap-2 bg-ink-800 border border-ink-700 rounded-lg px-3 py-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-xs font-mono text-ink-300 max-w-[100px] truncate">{admin?.username}</span>
+            </div>
             <button
               onClick={logout}
-              className="text-xs text-red-500 hover:text-red-400 font-mono font-semibold transition-colors"
+              className="flex items-center gap-1.5 text-xs font-mono text-ink-400 hover:text-brand-400 transition-colors border border-ink-700 hover:border-brand-700/50 px-2.5 sm:px-3 py-1.5 rounded-lg"
             >
-              LOGOUT
+              <svg className="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+              </svg>
+              <span className="hidden xs:inline">Logout</span>
             </button>
           </div>
         </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-brand-700/60 to-transparent" />
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <main className="max-w-5xl mx-auto px-3 sm:px-5 py-4 sm:py-6 space-y-4 sm:space-y-5">
+
+        {/* ── Stats ───────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {[
-            { label: 'TOTAL',     value: stats.total,    bg: 'bg-zinc-800',    text: 'text-white' },
-            { label: 'MENUNGGU',  value: stats.pending,  bg: 'bg-amber-900/60', text: 'text-amber-300' },
-            { label: 'DISETUJUI', value: stats.approved, bg: 'bg-emerald-900/60', text: 'text-emerald-300' },
-            { label: 'DITOLAK',   value: stats.rejected, bg: 'bg-red-900/60',   text: 'text-red-300' },
+            { label: 'Total',     value: stats.total,    accent: 'text-parchment-200', dot: 'bg-parchment-400' },
+            { label: 'Menunggu',  value: stats.pending,  accent: 'text-amber-400',     dot: 'bg-amber-500' },
+            { label: 'Disetujui', value: stats.approved, accent: 'text-emerald-400',   dot: 'bg-emerald-500' },
+            { label: 'Ditolak',   value: stats.rejected, accent: 'text-brand-400',     dot: 'bg-brand-600' },
           ].map((s) => (
-            <div key={s.label} className={`${s.bg} rounded-2xl border border-zinc-800 p-4 text-center`}>
-              <div className={`text-3xl font-extrabold ${s.text}`}>{s.value}</div>
-              <div className="text-xs text-zinc-500 font-mono mt-1">{s.label}</div>
+            <div key={s.label} className="bg-ink-700 border border-ink-600 rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+              <div className={`w-1.5 sm:w-2 h-7 sm:h-8 rounded-full ${s.dot} opacity-80 shrink-0`} />
+              <div className="min-w-0">
+                <div className={`text-xl sm:text-2xl font-extrabold font-mono leading-none ${s.accent}`}>{s.value}</div>
+                <div className="text-[10px] sm:text-xs text-ink-400 font-mono mt-0.5 truncate">{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 bg-zinc-900 rounded-2xl p-1 border border-zinc-800">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-mono font-semibold tracking-wider transition-all ${
-                activeTab === tab.key
-                  ? 'bg-brand-700 text-white'
-                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-              }`}
-            >
-              {tab.emoji} {tab.label.toUpperCase()}
-            </button>
-          ))}
-        </div>
+        {/* ── Tabs + Refresh ──────────────────────────────────────────── */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Tab group */}
+          <div className="flex gap-1 bg-ink-900 rounded-xl p-1 border border-ink-700 flex-1">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 py-2.5 sm:py-2 px-1 sm:px-2 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
+                  activeTab === tab.key
+                    ? 'bg-brand-700 text-parchment-100 shadow-sm'
+                    : 'text-ink-400 hover:text-parchment-300 hover:bg-ink-800'
+                }`}
+              >
+                {tab.label}
+                {tab.key === 'PENDING' && stats.pending > 0 && activeTab !== 'PENDING' && (
+                  <span className="bg-amber-500 text-ink-900 text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 rounded-full leading-none py-0.5">
+                    {stats.pending}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
 
-        {/* Refresh */}
-        <div className="flex justify-end">
+          {/* Refresh button */}
           <button
             onClick={loadData}
             disabled={loading}
-            className="text-xs text-zinc-500 hover:text-white font-mono flex items-center gap-1.5 transition-colors"
+            title="Refresh"
+            className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-ink-700 border border-ink-600 text-ink-400 hover:text-parchment-200 hover:border-ink-500 transition-all shrink-0"
           >
-            <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            REFRESH
           </button>
         </div>
 
-        {/* List */}
+        {/* ── List ────────────────────────────────────────────────────── */}
         {loading ? (
           <div className="space-y-3">
-            {[1,2,3].map((i) => (
-              <div key={i} className="card animate-pulse">
-                <div className="h-4 bg-zinc-800 rounded w-3/4 mb-2" />
-                <div className="h-4 bg-zinc-800 rounded w-1/2" />
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-ink-700 border border-ink-600 rounded-xl p-4 sm:p-5 animate-pulse space-y-3">
+                <div className="h-3 bg-ink-600 rounded w-2/3" />
+                <div className="h-3 bg-ink-600 rounded w-1/2" />
+                <div className="h-3 bg-ink-600 rounded w-1/3" />
               </div>
             ))}
           </div>
         ) : menfes.length === 0 ? (
-          <div className="card text-center py-12">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="text-zinc-500 font-mono text-sm">Tidak ada menfess di kategori ini.</p>
+          <div className="bg-ink-700 border border-ink-600 rounded-xl py-12 sm:py-16 text-center">
+            <svg className="w-10 h-10 text-ink-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p className="text-ink-400 font-mono text-sm">Tidak ada menfess di kategori ini.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {menfes.map((item) => (
-              <div key={item.id} className="card space-y-3 hover:border-zinc-700 transition-colors">
-                {/* Pesan */}
-                <p className="text-zinc-200 leading-relaxed whitespace-pre-wrap font-mono text-sm">
-                  "{item.message}"
-                </p>
+              <div
+                key={item.id}
+                className="bg-ink-700 border border-ink-600 rounded-xl overflow-hidden hover:border-ink-500 transition-colors group"
+              >
+                <div className="flex">
+                  {/* Accent strip kiri */}
+                  <div className="w-1 bg-brand-700 shrink-0 group-hover:bg-brand-600 transition-colors" />
 
-                {/* Info pengirim (admin only) */}
-                {(item.senderName || item.senderInfo) && (
-                  <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-3 space-y-1">
-                    <p className="text-xs font-mono font-semibold text-zinc-400">🔒 INFO PENGIRIM</p>
-                    {item.senderName && (
-                      <p className="text-sm text-zinc-300 font-mono">Nama: <span className="text-white">{item.senderName}</span></p>
+                  <div className="flex-1 p-3 sm:p-5 space-y-3 min-w-0">
+                    {/* Header row: status + tanggal */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <StatusBadge status={item.status} />
+                      <span className="text-[10px] sm:text-xs text-ink-500 font-mono">{formatDate(item.createdAt)}</span>
+                    </div>
+
+                    {/* Pesan */}
+                    <div>
+                      <span className="text-brand-600 text-lg leading-none select-none">"</span>
+                      <p className={`text-parchment-200 leading-relaxed whitespace-pre-wrap font-mono inline break-words ${
+                        item.message.length > 200
+                          ? 'text-xs'
+                          : item.message.length > 100
+                          ? 'text-sm'
+                          : 'text-sm sm:text-base'
+                      }`}>
+                        {item.message}
+                      </p>
+                      <span className="text-brand-600 text-lg leading-none select-none">"</span>
+                    </div>
+
+                    {/* Info pengirim */}
+                    {(item.senderName || item.senderInfo) && (
+                      <div className="bg-ink-800 border border-ink-600 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 space-y-1">
+                        <p className="text-[10px] font-mono font-bold text-ink-500 tracking-widest uppercase">
+                          Info Pengirim
+                        </p>
+                        {item.senderName && (
+                          <p className="text-xs text-parchment-400 font-mono">
+                            Nama: <span className="text-parchment-200 font-semibold">{item.senderName}</span>
+                          </p>
+                        )}
+                        {item.senderInfo && (
+                          <p className="text-xs text-parchment-400 font-mono break-words">Info: {item.senderInfo}</p>
+                        )}
+                      </div>
                     )}
-                    {item.senderInfo && (
-                      <p className="text-sm text-zinc-300 font-mono">Info: {item.senderInfo}</p>
+
+                    {!item.senderName && !item.senderInfo && (
+                      <p className="text-xs text-ink-500 font-mono italic">Dari Seseorang</p>
                     )}
+
+                    {item.approvedAt && (
+                      <p className="text-xs text-ink-500 font-mono">
+                        Disetujui: {formatDate(item.approvedAt)}
+                      </p>
+                    )}
+
+                    {/* Action bar — scroll horizontal di HP kecil jika penuh */}
+                    <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-ink-700/60">
+                      {item.status !== 'APPROVED' && (
+                        <button
+                          onClick={() => handleApprove(item.id)}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1.5 bg-emerald-800 hover:bg-emerald-700 text-parchment-100 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg transition-colors disabled:opacity-50 touch-manipulation"
+                        >
+                          {actionLoading === item.id + '_approve' ? (
+                            <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          ) : (
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                          )}
+                          Approve
+                        </button>
+                      )}
+                      {item.status !== 'REJECTED' && (
+                        <button
+                          onClick={() => handleReject(item.id)}
+                          disabled={!!actionLoading}
+                          className="flex items-center gap-1.5 bg-ink-600 hover:bg-brand-800 text-parchment-300 hover:text-parchment-100 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg border border-ink-500 hover:border-brand-700 transition-colors disabled:opacity-50 touch-manipulation"
+                        >
+                          {actionLoading === item.id + '_reject' ? (
+                            <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          ) : (
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                          )}
+                          Reject
+                        </button>
+                      )}
+                      {item.status === 'APPROVED' && (
+                        <button
+                          onClick={() => setExportTarget(item)}
+                          className="flex items-center gap-1.5 bg-ink-600 hover:bg-ink-500 text-parchment-300 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg border border-ink-500 hover:border-parchment-700/40 transition-colors touch-manipulation"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                          Export IG
+                        </button>
+                      )}
+
+                      {/* Hapus — push ke kanan */}
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        disabled={!!actionLoading}
+                        className="ml-auto flex items-center gap-1 text-xs text-ink-500 hover:text-brand-400 transition-colors font-mono disabled:opacity-40 py-2 sm:py-1 touch-manipulation"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        Hapus
+                      </button>
+                    </div>
                   </div>
-                )}
-
-                {/* Metadata */}
-                <div className="flex items-center gap-3 text-xs text-zinc-600 font-mono flex-wrap">
-                  <span>🕐 {formatDate(item.createdAt)}</span>
-                  {item.approvedAt && <span>✅ {formatDate(item.approvedAt)}</span>}
-                </div>
-
-                {/* Aksi */}
-                <div className="flex gap-2 flex-wrap pt-2 border-t border-zinc-800">
-                  {item.status !== 'APPROVED' && (
-                    <button
-                      onClick={() => handleApprove(item.id)}
-                      disabled={!!actionLoading}
-                      className="btn-success text-xs py-1.5 px-3 font-mono"
-                    >
-                      {actionLoading === item.id + '_approve' ? '...' : '✅ APPROVE'}
-                    </button>
-                  )}
-                  {item.status !== 'REJECTED' && (
-                    <button
-                      onClick={() => handleReject(item.id)}
-                      disabled={!!actionLoading}
-                      className="btn-danger text-xs py-1.5 px-3 font-mono"
-                    >
-                      {actionLoading === item.id + '_reject' ? '...' : '❌ REJECT'}
-                    </button>
-                  )}
-                  {item.status === 'APPROVED' && (
-                    <button
-                      onClick={() => setExportTarget(item)}
-                      className="bg-zinc-700 hover:bg-zinc-600 text-white text-xs py-1.5 px-3 rounded-lg font-mono font-semibold transition-colors"
-                    >
-                      📸 EXPORT IG
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    disabled={!!actionLoading}
-                    className="ml-auto text-xs text-zinc-600 hover:text-red-400 transition-colors font-mono"
-                  >
-                    🗑️ HAPUS
-                  </button>
                 </div>
               </div>
             ))}

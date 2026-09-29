@@ -1,0 +1,37 @@
+app: menfes-harkat-nekatt
+services:
+  - name: backend
+    type: web
+    git:
+      # Ganti dengan URL repo GitHub kamu
+      repository: github.com/USERNAME/REPO_NAME
+      branch: main
+      # Root folder backend di monorepo
+      workdir: backend
+    build:
+      buildpack: nodejs
+      build_command: npm install
+    run:
+      command: npx prisma migrate deploy && node src/index.js
+    ports:
+      - port: 3001
+        protocol: http
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      # Isi value berikut di dashboard Koyeb (jangan taruh secret di sini!)
+      - key: DATABASE_URL
+        value: ""
+      - key: DIRECT_URL
+        value: ""
+      - key: JWT_SECRET
+        value: ""
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: FRONTEND_URL
+        value: ""
+    scaling:
+      min: 1
+      max: 1

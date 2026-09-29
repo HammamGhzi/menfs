@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Kalau ada VITE_API_URL (production), pakai itu.
+// Kalau tidak ada (dev), fallback ke /api (Vite proxy).
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
