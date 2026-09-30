@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { menfesAPI } from '../api';
+import { TEMPLATES, getTemplateById } from '../config/templates';
+import TemplatePreview from '../components/TemplatePreview';
 
 const MAX_CHARS = 500;
 const MAX_NAME = 30;
@@ -9,9 +11,13 @@ export default function HomePage() {
   const [message, setMessage] = useState('');
   const [isAnon, setIsAnon] = useState(true);
   const [senderName, setSenderName] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('classic');
+  const [showPreview, setShowPreview] = useState(true); // Default tampil agar user langsung melihat bentuk aslinya
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastSubmittedTemplate, setLastSubmittedTemplate] = useState('Classic Dark');
 
+  const selectedTemplate = getTemplateById(selectedTemplateId);
   const remaining = MAX_CHARS - message.length;
 
   async function handleSubmit(e) {
@@ -31,7 +37,9 @@ export default function HomePage() {
       await menfesAPI.submit({
         message: trimmed,
         senderName: isAnon ? null : senderName.trim(),
+        senderInfo: selectedTemplate.name,
       });
+      setLastSubmittedTemplate(selectedTemplate.name);
       setSubmitted(true);
       setMessage('');
       setSenderName('');
@@ -49,14 +57,17 @@ export default function HomePage() {
     setMessage('');
     setSenderName('');
     setIsAnon(true);
+    setSelectedTemplateId('classic');
+    setShowPreview(true);
   }
 
   return (
     <div className="min-h-screen bg-ink-800">
       {/* Header */}
       <header className="bg-ink-900/95 backdrop-blur-sm border-b border-ink-600 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center">
-          <div>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img src="/template/logo.jpg" alt="Logo" className="w-7 h-7 rounded-full border border-ink-500 object-cover" />
             <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-none">
               <span className="text-parchment-200">HARKAT</span>{' '}
               <span className="text-brand-600 relative">
@@ -65,6 +76,9 @@ export default function HomePage() {
               </span>
             </h1>
           </div>
+          <span className="text-[11px] font-mono text-ink-400 bg-ink-800 border border-ink-600 px-2.5 py-1 rounded-full">
+            Menfess Kampus
+          </span>
         </div>
       </header>
 
@@ -78,18 +92,118 @@ export default function HomePage() {
             <span className="text-parchment-100">Kirim </span>
             <span className="text-brand-600">Menfess</span>
           </h2>
+          <p className="text-xs sm:text-sm text-parchment-300 max-w-md mx-auto">
+            Pilih template desain kesukaanmu, tulis pesan, dan lihat pratinjau langsung!
+          </p>
         </div>
 
         {/* Form */}
         {!submitted ? (
-          <div className="card border-ink-600 p-4 sm:p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="card border-ink-600 p-4 sm:p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
 
-              {/* Pesan */}
+              {/* 1. Pilih Template Menfess */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
+                    Pilih Template Desain
+                  </label>
+                  <span className="text-[11px] font-mono text-brand-400 bg-brand-950/70 border border-brand-700/60 px-2.5 py-0.5 rounded-md font-semibold">
+                    {selectedTemplate.name}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                  {TEMPLATES.map((tmpl) => {
+                    const isSelected = tmpl.id === selectedTemplateId;
+                    return (
+                      <button
+                        key={tmpl.id}
+                        type="button"
+                        onClick={() => setSelectedTemplateId(tmpl.id)}
+                        className={`relative p-2 rounded-xl border text-left transition-all duration-200 flex flex-col items-center gap-2 group ${
+                          isSelected
+                            ? 'bg-ink-800 border-brand-500 ring-2 ring-brand-500/40 shadow-xl scale-[1.02]'
+                            : 'bg-ink-800/80 border-ink-600 hover:border-ink-500 hover:bg-ink-800 opacity-85 hover:opacity-100'
+                        }`}
+                      >
+                        {/* Thumbnail image portrait agar terlihat jelas wujud aslinya */}
+                        <div className="w-full aspect-[3/4] rounded-lg overflow-hidden bg-black/60 border border-ink-600 flex items-center justify-center relative shadow-inner">
+                          <img
+                            src={tmpl.thumbnail}
+                            alt={tmpl.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              if (tmpl.fallbackSrc) e.target.src = tmpl.fallbackSrc;
+                            }}
+                          />
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-brand-900/15 border-2 border-brand-500 rounded-lg pointer-events-none" />
+                          )}
+                        </div>
+
+                        {/* Text info dengan warna kontras */}
+                        <div className="text-center w-full px-0.5">
+                          <p className={`text-xs font-mono font-bold truncate ${isSelected ? 'text-parchment-100' : 'text-parchment-300'}`}>
+                            {tmpl.badge}
+                          </p>
+                          <p className="text-[10px] text-parchment-400 font-mono truncate font-medium">
+                            {tmpl.tag}
+                          </p>
+                        </div>
+
+                        {/* Selected badge */}
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-brand-600 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-mono pt-0.5">
+                  <p className="text-parchment-400 text-[11px]">
+                    {selectedTemplate.description}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="text-brand-400 hover:text-brand-300 font-semibold transition-colors flex items-center gap-1 text-[11px] shrink-0 ml-2"
+                  >
+                    <span>{showPreview ? '▲ Sembunyikan Pratinjau' : '▼ Lihat Pratinjau Gambar Asli'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Pratinjau Langsung Gambar Template Asli */}
+              {showPreview && (
+                <div className="p-3.5 sm:p-4 rounded-xl bg-ink-900/90 border border-ink-600 space-y-2 animate-fadeIn">
+                  <div className="flex items-center justify-between border-b border-ink-700 pb-2">
+                    <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest flex items-center gap-1.5">
+                      <span>🖼️</span> Pratinjau Template Nyata ({selectedTemplate.name})
+                    </p>
+                    <span className="text-[10px] font-mono text-ink-400">
+                      Live Canvas
+                    </span>
+                  </div>
+
+                  <TemplatePreview
+                    template={selectedTemplate}
+                    message={message}
+                    senderName={senderName}
+                    isAnon={isAnon}
+                    className="pt-1 pb-1"
+                  />
+                </div>
+              )}
+
+              {/* 3. Isi Pesan */}
               <div>
                 <label
                   htmlFor="message"
-                  className="block text-xs font-semibold text-parchment-400 mb-2 font-mono uppercase tracking-widest"
+                  className="block text-xs font-semibold text-parchment-300 mb-2 font-mono uppercase tracking-widest"
                 >
                   Pesan Menfess
                 </label>
@@ -105,15 +219,20 @@ export default function HomePage() {
                   aria-label="Isi pesan menfess"
                   style={{ fontSize: '16px' /* cegah zoom iOS */ }}
                 />
-                <div className={`text-right text-xs mt-1 font-mono ${remaining < 50 ? 'text-brand-500' : 'text-ink-500'}`}>
-                  {remaining} karakter tersisa
+                <div className="flex items-center justify-between text-xs mt-1 font-mono">
+                  <span className="text-[11px] text-ink-400">
+                    Teks otomatis di-wrap ke template di atas
+                  </span>
+                  <span className={remaining < 50 ? 'text-brand-500 font-bold' : 'text-parchment-400'}>
+                    {remaining} karakter tersisa
+                  </span>
                 </div>
               </div>
 
-              {/* Pilihan pengirim */}
+              {/* 4. Pilihan Pengirim */}
               <div className="space-y-3">
-                <p className="text-xs font-semibold text-parchment-400 font-mono uppercase tracking-widest">
-                  Tampil sebagai
+                <p className="text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
+                  Tampil Sebagai
                 </p>
 
                 {/* Toggle anonim / nama sendiri */}
@@ -123,33 +242,33 @@ export default function HomePage() {
                     onClick={() => setIsAnon(true)}
                     className={`py-3 sm:py-2.5 px-3 rounded-xl border text-xs font-mono font-semibold transition-all ${
                       isAnon
-                        ? 'bg-brand-700 border-brand-600 text-parchment-100'
-                        : 'bg-ink-800 border-ink-600 text-ink-400 hover:text-parchment-300 hover:border-ink-500'
+                        ? 'bg-brand-700 border-brand-600 text-parchment-100 shadow-md'
+                        : 'bg-ink-800 border-ink-600 text-parchment-400 hover:text-parchment-200 hover:border-ink-500'
                     }`}
                   >
-                    Dari Seseorang
+                    Dari Seseorang (Anonim)
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsAnon(false)}
                     className={`py-3 sm:py-2.5 px-3 rounded-xl border text-xs font-mono font-semibold transition-all ${
                       !isAnon
-                        ? 'bg-brand-700 border-brand-600 text-parchment-100'
-                        : 'bg-ink-800 border-ink-600 text-ink-400 hover:text-parchment-300 hover:border-ink-500'
+                        ? 'bg-brand-700 border-brand-600 text-parchment-100 shadow-md'
+                        : 'bg-ink-800 border-ink-600 text-parchment-400 hover:text-parchment-200 hover:border-ink-500'
                     }`}
                   >
                     Tulis Nama
                   </button>
                 </div>
 
-                {/* Input nama */}
+                {/* Input nama jika tidak anonim */}
                 {!isAnon && (
                   <div>
                     <input
                       type="text"
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
-                      placeholder="Nama kamu..."
+                      placeholder="Nama kamu / inisial..."
                       maxLength={MAX_NAME}
                       className="input-field font-mono text-sm"
                       disabled={submitting}
@@ -157,28 +276,28 @@ export default function HomePage() {
                       autoFocus
                       style={{ fontSize: '16px' /* cegah zoom iOS */ }}
                     />
-                    <div className="text-right text-xs mt-1 font-mono text-ink-500">
+                    <div className="text-right text-xs mt-1 font-mono text-parchment-400">
                       {MAX_NAME - senderName.length} karakter tersisa
                     </div>
                   </div>
                 )}
-
               </div>
 
-              {/* Info */}
-              <div className="bg-ink-800 border border-ink-600 rounded-xl p-3">
-                <p className="text-xs text-ink-300 flex gap-2">
-                  <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-ink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              {/* Info Privasi */}
+              <div className="bg-ink-800/90 border border-ink-600 rounded-xl p-3">
+                <p className="text-xs text-parchment-300 flex items-center gap-2">
+                  <svg className="w-4 h-4 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <span>Identitasmu <strong className="text-parchment-200">100% anonim</strong></span>
+                  <span>Identitasmu <strong className="text-parchment-100">100% aman & anonim</strong></span>
                 </p>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={submitting || message.trim().length < 5 || (!isAnon && !senderName.trim())}
-                className="btn-primary w-full text-center font-mono tracking-widest py-3.5 sm:py-3"
+                className="btn-primary w-full text-center font-mono tracking-widest py-3.5 sm:py-3 shadow-lg hover:shadow-brand-900/30 transition-shadow"
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -188,22 +307,28 @@ export default function HomePage() {
                     </svg>
                     MENGIRIM...
                   </span>
-                ) : 'KIRIM MENFESS'}
+                ) : `KIRIM DENGAN ${selectedTemplate.badge.toUpperCase()}`}
               </button>
             </form>
           </div>
         ) : (
           <div className="card text-center space-y-4 border-brand-800/40 p-6 sm:p-8">
-            <svg className="w-12 h-12 text-brand-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-12 h-12 text-brand-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <h3 className="text-xl font-bold text-parchment-200">Menfess Terkirim!</h3>
-            <p className="text-ink-300 text-sm">
-              Sedang menunggu persetujuan admin. Sabar ya!
+            <h3 className="text-xl font-bold text-parchment-200">Menfess Berhasil Dikirim!</h3>
+            <p className="text-parchment-300 text-sm">
+              Sedang menunggu persetujuan admin sebelum diexport ke Instagram feed.
             </p>
-            <button onClick={handleReset} className="btn-primary font-mono py-3.5 sm:py-3 w-full sm:w-auto px-8">
-              KIRIM LAGI
-            </button>
+            <div className="inline-flex items-center gap-2 bg-ink-800 border border-ink-600 px-3 py-1.5 rounded-full text-xs font-mono text-parchment-300">
+              <span>🎨 Template:</span>
+              <strong className="text-brand-400">{lastSubmittedTemplate}</strong>
+            </div>
+            <div>
+              <button onClick={handleReset} className="btn-primary font-mono py-3.5 sm:py-3 w-full sm:w-auto px-8 mt-2">
+                KIRIM LAGI
+              </button>
+            </div>
           </div>
         )}
 

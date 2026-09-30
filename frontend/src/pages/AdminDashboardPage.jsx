@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { adminAPI } from '../api';
 import ExportModal from '../components/ExportModal';
+import { parseTemplateFromMenfes, getTemplateById } from '../config/templates';
 
 const STATUS_TABS = [
   { key: 'PENDING',  label: 'Menunggu'  },
@@ -240,25 +241,40 @@ export default function AdminDashboardPage() {
                       <span className="text-brand-600 text-lg leading-none select-none">"</span>
                     </div>
 
-                    {/* Info pengirim */}
-                    {(item.senderName || item.senderInfo) && (
-                      <div className="bg-ink-800 border border-ink-600 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 space-y-1">
-                        <p className="text-[10px] font-mono font-bold text-ink-500 tracking-widest uppercase">
-                          Info Pengirim
-                        </p>
-                        {item.senderName && (
-                          <p className="text-xs text-parchment-400 font-mono">
-                            Nama: <span className="text-parchment-200 font-semibold">{item.senderName}</span>
-                          </p>
-                        )}
-                        {item.senderInfo && (
-                          <p className="text-xs text-parchment-400 font-mono break-words">Info: {item.senderInfo}</p>
-                        )}
-                      </div>
-                    )}
+                    {/* Info pengirim & Template */}
+                    {(item.senderName || item.senderInfo) && (() => {
+                      const tmplId = parseTemplateFromMenfes(item);
+                      const tmpl = getTemplateById(tmplId);
+                      const isTemplateOnly = item.senderInfo && (
+                        item.senderInfo.toLowerCase().includes('template') ||
+                        item.senderInfo.toLowerCase().includes('classic')
+                      );
+
+                      return (
+                        <div className="bg-ink-800 border border-ink-600 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-mono font-bold text-ink-500 tracking-widest uppercase">
+                              Info Pengirim
+                            </p>
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-ink-700 border-ink-500 text-parchment-300 flex items-center gap-1">
+                              <span>🎨</span>
+                              <span>{tmpl.badge}</span>
+                            </span>
+                          </div>
+                          {item.senderName && (
+                            <p className="text-xs text-parchment-400 font-mono">
+                              Nama: <span className="text-parchment-200 font-semibold">{item.senderName}</span>
+                            </p>
+                          )}
+                          {item.senderInfo && !isTemplateOnly && (
+                            <p className="text-xs text-parchment-400 font-mono break-words">Info: {item.senderInfo}</p>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {!item.senderName && !item.senderInfo && (
-                      <p className="text-xs text-ink-500 font-mono italic">Dari Seseorang</p>
+                      <p className="text-xs text-ink-500 font-mono italic">Dari Seseorang · Classic</p>
                     )}
 
                     {item.approvedAt && (

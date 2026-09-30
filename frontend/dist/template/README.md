@@ -1,19 +1,24 @@
-# Template Background
+# Template Menfess Harkat Nekatt
 
-Letakkan file background JPG kamu di folder ini dengan nama:
+Folder ini menyimpan file background template yang dapat dipilih oleh pengguna saat mengirim menfess dan saat admin melakukan export ke Instagram feed:
 
-```
-background.jpg
-```
+## Daftar Template:
 
-Contoh path: `frontend/public/template/background.jpg`
+1. **Classic Dark (`background.jpg`)**
+   - Rasio rekomendasi: 1:1 (Square - 1080x1080 px) atau 4:5
+   - Gaya: Kertas sobek vintage bertinta hitam dengan tanda tangan/stempel
+   - Teks pesan: Warna gelap (`#1a1a1a`), font monospace (`Courier New`)
 
-## Spesifikasi yang disarankan:
-- Format: JPG atau PNG
-- Ukuran minimal: 1080x1080 px
-- Rasio: Square (1:1) atau Portrait (4:5) — gambar akan di-crop otomatis
-- File size: sebaiknya < 2MB untuk performa loading
+2. **Template 1 (`template-1.png` / `template 1.png`)**
+   - Rasio rekomendasi: 4:5 (Portrait - 1080x1350 px)
+   - Gaya: Langit biru cerah, awan, daun melayang, dan kartu frosted glass (glassmorphism)
+   - Teks pesan: Warna putih (`#ffffff`), font clean modern (`Inter`)
 
-## Cara ganti:
-Hapus/replace file `background.jpg` di folder ini dengan file background baru kamu.
-Refresh halaman export untuk melihat perubahan.
+3. **Template 2 (`template-2.png` / `template 2.png`)**
+   - Rasio rekomendasi: 4:5 (Portrait - 1080x1350 px)
+   - Gaya: Kertas putih bersih elegan & minimalis
+   - Teks pesan: Warna hitam (`#111111`), font monospace / clean
+
+## Cara Mengganti / Memperbarui:
+Cukup replace file gambar yang sesuai di folder ini dengan nama file yang sama.
+Refresh halaman web atau modal export untuk melihat pembaruan.

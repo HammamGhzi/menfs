@@ -146,12 +146,14 @@ Koyeb akan auto-redeploy.
 
 ---
 
-## Template Background
+## Template Background Menfess
 
-Taruh file JPG background kamu di:
-```
-frontend/public/template/background.jpg
-```
+Folder `frontend/public/template/` menyediakan 3 pilihan template:
+- **Classic Dark**: `frontend/public/template/background.jpg` (Vintage Ripped Paper 1:1 / 4:5)
+- **Template 1**: `frontend/public/template/template 1.png` (Blue Sky Glassmorphism 4:5)
+- **Template 2**: `frontend/public/template/template 2.png` (White Minimalist 4:5)
+
+Pengirim dapat memilih template yang diinginkan di halaman utama, dan admin dapat mengekspor atau mengganti template secara instan di dashboard.
 
 ---
 
