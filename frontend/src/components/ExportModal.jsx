@@ -5,6 +5,8 @@ import { renderMenfessToCanvas, CANVAS_SIZE } from '../utils/drawMenfessCanvas';
 
 export default function ExportModal({ menfes, onClose }) {
   const canvasRef = useRef(null);
+  const controlsRef = useRef(null);
+  const bodyRef = useRef(null);
 
   // Deteksi template awal dari data menfess
   const initialTemplateId = parseTemplateFromMenfes(menfes);
@@ -27,6 +29,30 @@ export default function ExportModal({ menfes, onClose }) {
   const [msgX, setMsgX] = useState(currentTemplate.defaultMessage.posX);
   const [msgY, setMsgY] = useState(currentTemplate.defaultMessage.posY);
   const [msgRotate, setMsgRotate] = useState(currentTemplate.defaultMessage.rotate);
+
+  // True setelah kolom controls di-scroll: preview HP mengecil jadi strip
+  // supaya area slider tetap lega. Di desktop preview punya kolom sendiri
+  // sehingga nilai ini tidak dipakai.
+  const [compact, setCompact] = useState(false);
+
+  // Ukuran area body modal (px), dibaca lewat ResizeObserver. Preview
+  // dihitung dari sisa ruang di dalam body ini — bukan angka tetap — supaya
+  // ikut sebesar mungkin tanpa menabrak kolom controls.
+  const [box, setBox] = useState({ w: 0, h: 0 });
+
+  // Desktop mengikuti breakpoint `sm` (640px) lewat listener, bukan
+  // window.innerWidth yang dibaca sekali saat render: kalau jendela di-resize
+  // selagi modal terbuka, JS dan CSS harus sepakat breakpoint mana yang aktif.
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Padding kolom preview (p-3) dan ruang minimum yang selalu disimpan untuk
+  // controls: lebar di desktop (controls di samping), tinggi di mobile
+  // (controls di bawah).
+  const PREVIEW_PAD = 24;
+  const MIN_CTRL_W = 360;
+  const MIN_CTRL_H = 200;
+  // Tinggi strip preview ketika mobile dalam mode compact.
+  const COMPACT_H = 140;
 
   // Switch template dan terapkan preset default template tersebut
   function handleSelectTemplate(tmplId) {
@@ -95,6 +121,47 @@ export default function ExportModal({ menfes, onClose }) {
     };
   }, [selectedTemplateId, ratio, fontSize, fontSizeName, menfes, posX, posY, rotate, msgX, msgY, msgRotate]);
 
+  // Breakpoint listener (desktop vs mobile).
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 640px)');
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  // Ukur area body. Guard 1px mencegah loop: preview melebar → kolom
+  // controls menyempit → body (lebarnya tetap) memicu callback lagi.
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setBox((prev) =>
+        Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1
+          ? prev
+          : { w: width, h: height }
+      );
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Kolom controls = satu-satunya area scroll di modal ini. Preview cuma
+  // menyusut di HP, jadi di desktop state ini tidak disentuh. Efek ini ikut
+  // bergantung ke isDesktop supaya langsung menyinkronkan ulang saat window
+  // di-cross melewati breakpoint.
+  useEffect(() => {
+    const el = controlsRef.current;
+    if (!el) return;
+
+    const sync = () => setCompact(!isDesktop && el.scrollTop > 40);
+
+    sync();
+    el.addEventListener('scroll', sync, { passive: true });
+    return () => el.removeEventListener('scroll', sync);
+  }, [isDesktop]);
+
   async function handleDownload() {
     setDownloading(true);
     try {
@@ -133,7 +200,32 @@ export default function ExportModal({ menfes, onClose }) {
   }
 
   const { w, h } = CANVAS_SIZE[ratio] || CANVAS_SIZE['1:1'];
-  const previewW = typeof window !== 'undefined' && window.innerWidth < 400 ? 260 : 320;
+
+  // Lebar preview hanya untuk TAMPILAN. Resolusi canvas tetap CANVAS_SIZE
+  // (lihat renderMenfessToCanvas), jadi membesar-/mengecilkan preview tidak
+  // mengubah file download.
+  //
+  // Preview mengisi ruang yang tersisa di body modal:
+  //   desktop → controls di samping, jadi preview dibatasi oleh TINGGI
+  //   mobile  → controls di bawah, jadi preview dibatasi oleh LEBAR
+  // Batas minimum controls (360px / 200px) yang dipakai untuk menyisakan ruang
+  // dari dua sisi. Kalau body belum terukur (render pertama sebelum
+  // ResizeObserver jalan), pakai fallback supaya canvas tidak nol.
+  const availW = box.w - PREVIEW_PAD - (isDesktop ? MIN_CTRL_W : 0);
+  const availH = box.h - PREVIEW_PAD - (isDesktop ? 0 : MIN_CTRL_H);
+  const previewW = (() => {
+    if (!box.w) return isDesktop ? 320 : 260; // body belum terukur
+    // Rasio width/height dari canvas: 1 untuk 1:1, 0.8 untuk 4:5.
+    const aspect = w / h;
+    if (isDesktop) {
+      // Preview di kiri, controls di kanan → tinggi yang membatasi.
+      return Math.max(160, Math.floor(Math.min(availW, availH * aspect)));
+    }
+    // Mobile: kolom kontrol ada di bawah → lebar yang membatasi. Mode
+    // compact dikunci ke COMPACT_H tinggi supaya area slider dapat ruang.
+    const hLimit = compact ? COMPACT_H : availH;
+    return Math.max(1, Math.floor(Math.min(availW, hLimit * aspect)));
+  })();
   const previewH = Math.round((h / w) * previewW);
 
   return (
@@ -141,14 +233,17 @@ export default function ExportModal({ menfes, onClose }) {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-md p-0 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-ink-700 border border-ink-600 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] sm:max-h-[95vh] overflow-y-auto overscroll-contain">
+      {/* Sheet dari bawah di mobile, dialog tengah di tablet/desktop.
+          Height tetap (bukan max-h) + flex column: preview dan footer jadi
+          area non-scroll, hanya kolom controls yang scroll. */}
+      <div className="bg-ink-700 border border-ink-600 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-[1280px] h-[92vh] sm:h-[95vh] flex flex-col overflow-hidden">
         {/* Handle bar mobile */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden" aria-hidden="true">
+        <div className="flex-none flex justify-center pt-3 pb-1 sm:hidden" aria-hidden="true">
           <div className="w-10 h-1 bg-ink-500 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-ink-600">
+        <div className="flex-none flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-ink-600">
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -166,7 +261,39 @@ export default function ExportModal({ menfes, onClose }) {
           </button>
         </div>
 
-        <div className="p-4 sm:p-5 space-y-4">
+        {/* Body — preview tidak pernah ikut scroll, hanya kolom controls.
+            bodyRef diukur supaya preview bisa hitung sisa ruang (previewW). */}
+        <div ref={bodyRef} className="flex-1 min-h-0 flex flex-col sm:flex-row">
+          {/* Preview canvas — kolom kiri di desktop, strip atas di mobile.
+              Di desktop lebarnya = previewW + padding (p-3), mengikuti hasil
+              hitungan di atas supaya canvas dapat lebar penuhnya (maxWidth:100%
+              tidak memotong), dan sm:self-start supaya kolom tidak ikut
+              meninggi saat rasio 4:5.
+              Di mobile kolom tetap full-width (default stretch) dan canvas
+              di-center, supaya panel gelapnya tetap membentang penuh. */}
+          <div
+            className="flex-none flex items-center justify-center bg-ink-800 border-b sm:border-b-0 sm:border-r border-ink-600 p-3 sm:self-start"
+            style={isDesktop ? { width: previewW + PREVIEW_PAD } : undefined}
+          >
+            <canvas
+              ref={canvasRef}
+              style={{
+                width: previewW,
+                height: previewH,
+                borderRadius: 8,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+                maxWidth: '100%',
+              }}
+            />
+          </div>
+
+          {/* Controls — satu-satunya area scroll di modal ini.
+              sm:min-w-[360px] menjaga agar kolom ini tidak tergerus oleh
+              preview yang lebar (nilai yang sama dengan MIN_CTRL_W). */}
+          <div
+            ref={controlsRef}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 sm:min-w-[360px] space-y-4"
+          >
           {/* Pemilih Template */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -226,20 +353,6 @@ export default function ExportModal({ menfes, onClose }) {
               ⚠️ File template tidak ditemukan — beralih ke fallback render.
             </div>
           )}
-
-          {/* Preview canvas */}
-          <div className="flex justify-center bg-ink-800 border border-ink-600 rounded-xl p-3">
-            <canvas
-              ref={canvasRef}
-              style={{
-                width: previewW,
-                height: previewH,
-                borderRadius: 8,
-                boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
-                maxWidth: '100%',
-              }}
-            />
-          </div>
 
           {/* Controls */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -441,38 +554,39 @@ export default function ExportModal({ menfes, onClose }) {
               <span className="text-brand-600">"</span>{menfes.message}<span className="text-brand-600">"</span>
             </p>
           </div>
-
-          {/* Aksi */}
-          <div className="flex gap-3 pt-1 pb-safe">
-            <button
-              onClick={onClose}
-              className="btn-secondary flex-1 font-mono text-sm py-3.5 sm:py-3 touch-manipulation"
-            >
-              Batal
-            </button>
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="btn-primary flex-1 font-mono text-sm flex items-center justify-center gap-2 py-3.5 sm:py-3 touch-manipulation"
-            >
-              {downloading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Downloading...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download JPG
-                </>
-              )}
-            </button>
           </div>
+        </div>
+
+        {/* Aksi — footer nempel, tidak ikut scroll */}
+        <div className="flex-none flex gap-3 px-4 sm:px-5 py-3 border-t border-ink-600">
+          <button
+            onClick={onClose}
+            className="btn-secondary flex-1 font-mono text-sm py-3.5 sm:py-3 touch-manipulation"
+          >
+            Batal
+          </button>
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="btn-primary flex-1 font-mono text-sm flex items-center justify-center gap-2 py-3.5 sm:py-3 touch-manipulation"
+          >
+            {downloading ? (
+              <>
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Downloading...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download JPG
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
