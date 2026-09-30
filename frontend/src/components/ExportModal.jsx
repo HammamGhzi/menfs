@@ -22,6 +22,12 @@ export default function ExportModal({ menfes, onClose }) {
   const [posY, setPosY] = useState(currentTemplate.defaultSender.posY);
   const [rotate, setRotate] = useState(currentTemplate.defaultSender.rotate);
 
+  // Posisi teks menfes — dipatok ke titik tengah blok, bukan kiri-atas,
+  // supaya blok multi-baris tetap stabil dan rotasi berputar di sekitar pusat.
+  const [msgX, setMsgX] = useState(currentTemplate.defaultMessage.posX);
+  const [msgY, setMsgY] = useState(currentTemplate.defaultMessage.posY);
+  const [msgRotate, setMsgRotate] = useState(currentTemplate.defaultMessage.rotate);
+
   // Switch template dan terapkan preset default template tersebut
   function handleSelectTemplate(tmplId) {
     const tmpl = getTemplateById(tmplId);
@@ -32,6 +38,9 @@ export default function ExportModal({ menfes, onClose }) {
     setPosX(tmpl.defaultSender.posX);
     setPosY(tmpl.defaultSender.posY);
     setRotate(tmpl.defaultSender.rotate);
+    setMsgX(tmpl.defaultMessage.posX);
+    setMsgY(tmpl.defaultMessage.posY);
+    setMsgRotate(tmpl.defaultMessage.rotate);
   }
 
   // Reset koordinat slider ke default template saat ini
@@ -41,6 +50,9 @@ export default function ExportModal({ menfes, onClose }) {
     setRotate(currentTemplate.defaultSender.rotate);
     setFontSize(currentTemplate.defaultFontSize);
     setFontSizeName(currentTemplate.defaultFontSizeName);
+    setMsgX(currentTemplate.defaultMessage.posX);
+    setMsgY(currentTemplate.defaultMessage.posY);
+    setMsgRotate(currentTemplate.defaultMessage.rotate);
     toast.success('Posisi direset ke default template.');
   }
 
@@ -63,6 +75,9 @@ export default function ExportModal({ menfes, onClose }) {
         posX,
         posY,
         rotate,
+        msgX,
+        msgY,
+        msgRotate,
         onStatusChange: setBgStatus,
       });
     };
@@ -78,7 +93,7 @@ export default function ExportModal({ menfes, onClose }) {
     return () => {
       isMounted = false;
     };
-  }, [selectedTemplateId, ratio, fontSize, fontSizeName, menfes, posX, posY, rotate]);
+  }, [selectedTemplateId, ratio, fontSize, fontSizeName, menfes, posX, posY, rotate, msgX, msgY, msgRotate]);
 
   async function handleDownload() {
     setDownloading(true);
@@ -95,6 +110,9 @@ export default function ExportModal({ menfes, onClose }) {
         posX,
         posY,
         rotate,
+        msgX,
+        msgY,
+        msgRotate,
       });
       await new Promise((r) => setTimeout(r, 300));
 
@@ -354,6 +372,66 @@ export default function ExportModal({ menfes, onClose }) {
                 className="w-full accent-brand-600 h-5"
               />
             </div>
+          </div>
+
+          {/* Posisi Teks Pesan */}
+          <div className="bg-ink-800 border border-ink-600 rounded-xl p-3 space-y-3">
+            <p className="text-[10px] font-mono font-bold text-parchment-400 tracking-widest uppercase">
+              Posisi Teks Pesan
+            </p>
+
+            <div>
+              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+                <span>Kiri ← X → Kanan</span>
+                <span className="text-parchment-400">{msgX}%</span>
+              </div>
+              <input
+                type="range"
+                min={25}
+                max={75}
+                step={0.5}
+                value={msgX}
+                onChange={(e) => setMsgX(Number(e.target.value))}
+                className="w-full accent-brand-600 h-5"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+                <span>Atas ↑ Y ↓ Bawah</span>
+                <span className="text-parchment-400">{msgY}%</span>
+              </div>
+              <input
+                type="range"
+                min={25}
+                max={75}
+                step={0.5}
+                value={msgY}
+                onChange={(e) => setMsgY(Number(e.target.value))}
+                className="w-full accent-brand-600 h-5"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+                <span>Rotasi ↺</span>
+                <span className="text-parchment-400">{msgRotate}°</span>
+              </div>
+              <input
+                type="range"
+                min={-15}
+                max={15}
+                step={0.5}
+                value={msgRotate}
+                onChange={(e) => setMsgRotate(Number(e.target.value))}
+                className="w-full accent-brand-600 h-5"
+              />
+            </div>
+
+            <p className="text-[10px] text-ink-500 font-mono">
+              Diukur dari titik tengah blok teks, bukan tepi kiri. Teks boleh menjulur keluar
+              kertas — naikkan "Teks Pesan" dulu kalau mau lebih kecil.
+            </p>
           </div>
 
           {/* Pesan preview */}

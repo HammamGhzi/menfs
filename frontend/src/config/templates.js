@@ -40,6 +40,15 @@ export const TEMPLATES = [
       prefix: '',
       hasBakedAnon: false,
     },
+    // Posisi blok teks pesan, dalam persen dari canvas penuh dan diukur dari
+    // titik tengah blok (bukan tepi kiri). Semua template punya kertas yang
+    // terpusat di x=50%, jadi angka ini cocok untuk semuanya — tapi tetap
+    // per-template supaya tiap template bisa disetel sendiri nanti.
+    defaultMessage: {
+      posX: 50,
+      posY: 53,
+      rotate: 0,
+    },
   },
   {
     id: 'template1',
@@ -75,6 +84,11 @@ export const TEMPLATES = [
       prefix: '',
       hasBakedAnon: false,
     },
+    defaultMessage: {
+      posX: 50,
+      posY: 53,
+      rotate: 0,
+    },
   },
   {
     id: 'template2',
@@ -109,6 +123,11 @@ export const TEMPLATES = [
       fontWeight: '700',
       prefix: '',
       hasBakedAnon: false,
+    },
+    defaultMessage: {
+      posX: 50,
+      posY: 53,
+      rotate: 0,
     },
   },
 ];

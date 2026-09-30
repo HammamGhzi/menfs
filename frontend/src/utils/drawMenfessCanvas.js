@@ -30,6 +30,65 @@ export function wrapText(ctx, text, maxWidth, maxLines = 10) {
 }
 
 /**
+ * Gambar pesan menfes, dipatok ke TITIK TENGAH blok teks.
+ *
+ * Kenapa titik tengah dan bukan tepi kiri-atas seperti implementasi lama:
+ *   - blok multi-baris tidak bergeser sendiri saat isi atau ukuran berubah
+ *   - slider rotasi memutar teks di sekitar pusatnya, bukan pojok
+ *
+ * `bounds` hanya dipakai untuk menentukan lebar area wrap. Posisi absolut
+ * datang dari msgX/msgY, jadi fungsi ini tidak perlu tahu di mana kertasnya.
+ * Dipakai oleh renderMenfessToCanvas() dan drawFallback() supaya kedua jalur
+ * tidak punya salinan logika yang bisa melenceng.
+ *
+ * `textColor` / `fontFamily` / `maxLines` bisa dioverride karena jalur
+ * fallback sengaja memakai nilai yang berbeda dari template aslinya.
+ */
+function drawMessage(ctx, w, h, {
+  template,
+  bounds,
+  text,
+  fontSize,
+  msgX,
+  msgY,
+  msgRotate,
+  textColor,
+  fontFamily,
+  maxLines,
+}) {
+  const paperW = w * bounds.w;
+  const padX = paperW * (bounds.padX || 0.06);
+  const maxTextW = paperW - padX * 2;
+
+  ctx.save();
+  ctx.font = `${template.fontWeight || '600'} ${fontSize}px ${fontFamily || template.fontFamily}`;
+  ctx.fillStyle = textColor || template.textColor || '#1a1a1a';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  if (template.textShadow) {
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+  }
+
+  // Font harus sudah diset sebelum wrapText (wrapText pakai measureText)
+  const lines = wrapText(ctx, text, maxTextW, maxLines || template.maxLines || 10);
+  const lineHeight = fontSize * (template.lineHeightMultiplier || 1.55);
+  const totalTextH = lines.length * lineHeight;
+
+  ctx.translate(w * (msgX / 100), h * (msgY / 100));
+  ctx.rotate((msgRotate * Math.PI) / 180);
+
+  const startX = -maxTextW / 2;
+  const startY = -totalTextH / 2;
+  lines.forEach((line, i) => {
+    ctx.fillText(line, startX, startY + i * lineHeight);
+  });
+  ctx.restore();
+}
+
+/**
  * Render template menfess ke HTML5 canvas dengan background gambar asli
  */
 export function renderMenfessToCanvas(canvas, {
@@ -43,6 +102,9 @@ export function renderMenfessToCanvas(canvas, {
   posX = null,
   posY = null,
   rotate = null,
+  msgX = null,
+  msgY = null,
+  msgRotate = null,
   onStatusChange = null,
 }) {
   if (!canvas || !template) return;
@@ -58,6 +120,9 @@ export function renderMenfessToCanvas(canvas, {
   const actualPosX = posX !== null && posX !== undefined ? posX : template.defaultSender.posX;
   const actualPosY = posY !== null && posY !== undefined ? posY : template.defaultSender.posY;
   const actualRotate = rotate !== null && rotate !== undefined ? rotate : template.defaultSender.rotate;
+  const actualMsgX = msgX !== null && msgX !== undefined ? msgX : template.defaultMessage.posX;
+  const actualMsgY = msgY !== null && msgY !== undefined ? msgY : template.defaultMessage.posY;
+  const actualMsgRotate = msgRotate !== null && msgRotate !== undefined ? msgRotate : template.defaultMessage.rotate;
 
   const img = new Image();
   img.crossOrigin = 'anonymous';
@@ -94,43 +159,21 @@ export function renderMenfessToCanvas(canvas, {
 
     // 2. Area teks pesan
     const bounds = template.bounds[actualRatio] || template.bounds['1:1'];
-    const paperX = w * bounds.x;
-    const paperY = h * bounds.y;
-    const paperW = w * bounds.w;
-    const paperH = h * bounds.h;
-
-    const padX = paperW * (bounds.padX || 0.06);
-    const padY = paperH * (bounds.padY || 0.06);
-    const maxTextW = paperW - padX * 2;
 
     const displayMsg = message && message.trim()
       ? message.trim()
       : 'Tulis pesan menfess kamu di sini...';
 
     // 3. Tulis Pesan
-    ctx.save();
-    ctx.font = `${template.fontWeight || '600'} ${actualFontSize}px ${template.fontFamily}`;
-    ctx.fillStyle = template.textColor || '#1a1a1a';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-
-    if (template.textShadow) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetY = 2;
-    }
-
-    const lineHeight = actualFontSize * (template.lineHeightMultiplier || 1.55);
-    const lines = wrapText(ctx, displayMsg, maxTextW, template.maxLines || 10);
-
-    const totalTextH = lines.length * lineHeight;
-    const textStartY = paperY + Math.max(0, (paperH - totalTextH) / 2) - padY * 0.4;
-    const textStartX = paperX + padX;
-
-    lines.forEach((line, i) => {
-      ctx.fillText(line, textStartX, textStartY + i * lineHeight);
+    drawMessage(ctx, w, h, {
+      template,
+      bounds,
+      text: displayMsg,
+      fontSize: actualFontSize,
+      msgX: actualMsgX,
+      msgY: actualMsgY,
+      msgRotate: actualMsgRotate,
     });
-    ctx.restore();
 
     // 4. Nama Pengirim
     const hasCustomName = !isAnon && Boolean(senderName && senderName.trim());
@@ -183,11 +226,36 @@ export function renderMenfessToCanvas(canvas, {
       return;
     }
     if (onStatusChange) onStatusChange('error');
-    drawFallback(ctx, w, h, template, message, senderName, isAnon, actualFontSize, actualFontSizeName);
+    drawFallback(ctx, w, h, template, {
+      message,
+      senderName,
+      isAnon,
+      fontSize: actualFontSize,
+      fontSizeName: actualFontSizeName,
+      msgX: actualMsgX,
+      msgY: actualMsgY,
+      msgRotate: actualMsgRotate,
+    });
   };
 }
 
-function drawFallback(ctx, w, h, template, message, senderName, isAnon, fontSize, fontSizeName) {
+// Area kertas untuk jalur fallback. Sengaja bukan bounds template: kalau
+// background gagal dimuat, kita tetap menggambar kertas dengan proporsi
+// yang selalu terlihat, bukan proporsi template yang mungkin tidak cocok.
+const FALLBACK_BOUNDS = { x: 0.085, y: 0.24, w: 0.83, h: 0.54, padX: 0.08 };
+
+function drawFallback(ctx, w, h, template, opts = {}) {
+  const {
+    message = '',
+    senderName = '',
+    isAnon = true,
+    fontSize = 36,
+    fontSizeName = 28,
+    msgX = 50,
+    msgY = 53,
+    msgRotate = 0,
+  } = opts;
+
   ctx.fillStyle = '#111111';
   ctx.fillRect(0, 0, w, h);
 
@@ -200,10 +268,10 @@ function drawFallback(ctx, w, h, template, message, senderName, isAnon, fontSize
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
   ctx.fillText(template.name.toUpperCase(), w / 2, h * 0.16);
 
-  const paperX = w * 0.085;
-  const paperY = h * 0.24;
-  const paperW = w * 0.83;
-  const paperH = h * 0.54;
+  const paperX = w * FALLBACK_BOUNDS.x;
+  const paperY = h * FALLBACK_BOUNDS.y;
+  const paperW = w * FALLBACK_BOUNDS.w;
+  const paperH = h * FALLBACK_BOUNDS.h;
 
   ctx.fillStyle = template.id === 'template1' ? '#1e3a8a' : '#f0ebe3';
   ctx.beginPath();
@@ -214,24 +282,17 @@ function drawFallback(ctx, w, h, template, message, senderName, isAnon, fontSize
   }
   ctx.fill();
 
-  const textPaddingX = paperW * 0.08;
-  const maxTextW = paperW - textPaddingX * 2;
-  ctx.save();
-  ctx.font = `600 ${fontSize}px ${template.fontFamily}`;
-  ctx.fillStyle = template.id === 'template1' ? '#ffffff' : '#1a1a1a';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-
-  const lineHeight = fontSize * 1.55;
-  const lines = wrapText(ctx, message || 'Tulis pesan menfess kamu...', maxTextW, 8);
-  const totalTextH = lines.length * lineHeight;
-  const textStartY = paperY + (paperH - totalTextH) / 2;
-  const textStartX = paperX + textPaddingX;
-
-  lines.forEach((line, i) => {
-    ctx.fillText(line, textStartX, textStartY + i * lineHeight);
+  drawMessage(ctx, w, h, {
+    template,
+    bounds: FALLBACK_BOUNDS,
+    text: message || 'Tulis pesan menfess kamu...',
+    fontSize,
+    msgX,
+    msgY,
+    msgRotate,
+    textColor: template.id === 'template1' ? '#ffffff' : '#1a1a1a',
+    maxLines: 8,
   });
-  ctx.restore();
 
   const displayName = !isAnon && senderName?.trim() ? senderName.trim() : 'Seseorang';
   ctx.font = `bold ${fontSizeName}px ${template.fontFamily}`;
