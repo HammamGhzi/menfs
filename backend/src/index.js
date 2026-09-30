@@ -24,6 +24,14 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .map((url) => url.trim())
   .filter(Boolean);
 
+// Pastikan production URL selalu ada
+if (!allowedOrigins.includes('https://harkatnekat.vercel.app')) {
+  allowedOrigins.push('https://harkatnekat.vercel.app');
+}
+
+console.log('🌐 FRONTEND_URL env:', process.env.FRONTEND_URL);
+console.log('✅ Allowed origins:', allowedOrigins);
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
