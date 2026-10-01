@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { audit } = require('../lib/audit');
 
 const prisma = new PrismaClient();
 
@@ -38,6 +39,17 @@ async function getAllMenfes(req, res) {
       prisma.menfes.count({ where }),
     ]);
 
+    // Membaca daftar admin adalah aksi paling sensitif di aplikasi ini:
+    // responsnya memuat senderName, senderInfo dan ipHash untuk setiap menfes.
+    // Kalau password pernah bocor, ini yang pertama dilakukan penyerang.
+    // Dicatat supaya aktivitas baca bisa dibedakan dari tidak ada aktivitas.
+    audit('menfes.list', req, {
+      page,
+      limit,
+      filter: status || 'ALL',
+      returned: menfes.length,
+    });
+
     res.json({
       data: menfes,
       pagination: {
@@ -74,6 +86,8 @@ async function approveMenfes(req, res) {
       },
     });
 
+    audit('menfes.approve', req, { menfesId: id });
+
     res.json({ message: 'Menfes berhasil diapprove.', data: updated });
   } catch (err) {
     console.error('Approve menfes error:', err);
@@ -99,6 +113,8 @@ async function rejectMenfes(req, res) {
       data: { status: 'REJECTED' },
     });
 
+    audit('menfes.reject', req, { menfesId: id });
+
     res.json({ message: 'Menfes berhasil direject.', data: updated });
   } catch (err) {
     console.error('Reject menfes error:', err);
@@ -120,6 +136,8 @@ async function deleteMenfes(req, res) {
     }
 
     await prisma.menfes.delete({ where: { id } });
+
+    audit('menfes.delete', req, { menfesId: id });
 
     res.json({ message: 'Menfes berhasil dihapus.' });
   } catch (err) {

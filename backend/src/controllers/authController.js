@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const { audit, auditSecurity } = require('../lib/audit');
 
 const prisma = new PrismaClient();
 
@@ -31,8 +32,16 @@ async function login(req, res) {
     const isValid = await bcrypt.compare(password, admin?.password || dummyHash);
 
     if (!admin || !isValid) {
+      // Password TIDAK PERNAH dicatat. Username dicatat karena itu satu-satunya
+      // petunjuk untuk membedakan serangan bertarget dari typos biasa.
+      auditSecurity('login.failed', req, {
+        username: username.trim().slice(0, 64),
+        accountExists: !!admin,
+      });
       return res.status(401).json({ error: 'Username atau password salah.' });
     }
+
+    auditSecurity('login.ok', req);
 
     // Generate JWT
     const token = jwt.sign(
@@ -111,6 +120,10 @@ async function changePassword(req, res) {
       where: { id: req.admin.id },
       data: { password: hashed },
     });
+
+    // Catat dengan panjang, bukan isinya, supaya rotasi bisa dibuktikan
+    // terjadi tanpa menyalin password ke log.
+    audit('auth.password_changed', req, { newLength: newPassword.length });
 
     res.json({ message: 'Password berhasil diganti.' });
   } catch (err) {
