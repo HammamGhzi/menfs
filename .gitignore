@@ -17,15 +17,6 @@ build/
 # Prisma
 backend/prisma/migrations/*.db
 
-# Gambar hasil render untuk Instagram (disimpan agar bisa di-fetch Meta).
-# JANGAN di-commit: ini binary dan membesar terus.
-backend/uploads/
-
-# Sesi login Instagram — TIDAK LAGI dipakai (tidak ada lagi yang login
-# pakai username/password), tapi dijaga supaya file lama tidak ikut ter-add.
-.ig_session.json
-ig_session.json
-
 # Logs
 *.log
 npm-debug.log*

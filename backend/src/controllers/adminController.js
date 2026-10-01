@@ -149,36 +149,14 @@ async function getStats(req, res) {
 }
 
 
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-const ig = require('../services/instagramGraph');
+const instagramBot = require('../services/instagramBot');
 
-// Folder yang sudah dilayani sebagai statis publik oleh index.js
-// (app.use('/uploads', express.static(...))). Meta akan fetch URL ini.
-const UPLOADS_DIR = path.join(__dirname, '../../uploads');
-
-// Batas ukuran file gambar yang di-unggah (dalam byte).
-// Docs IG: maksimal 8MB untuk feed. Kita jauh lebih ketat karena
-// ini hasil render canvas di browser (biasanya 200-500KB).
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 /**
  * POST /api/admin/menfes/:id/post-ig
- * Post menfes ke Instagram feed via Content Publishing API (jalur resmi).
- *
- * Alur:
- *   1. Terima gambar base64 dari browser (sudah dirender oleh ExportModal).
- *   2. Simpan ke uploads/ — route ini memang sudah statis publik di prod.
- *   3. Instagram FETCH URL publik itu dari server Meta (harus publik).
- *   4. Setelah container FINISHED, publish, lalu hapus file sementara.
- *
- * Kenapa file dihapus: disk di Render itu ephemeral — akan hilang sendiri
- * saat deploy/restart. Menghapusnya lebih dulu mencegah file basi menumpuk.
+ * Post menfes langsung ke Instagram feed & tandai diapprove
  */
 async function postInstagram(req, res) {
-  let tmpPath = null;
-
   try {
     const { id } = req.params;
     const { imageBase64, caption, autoApprove = true } = req.body;
@@ -187,76 +165,25 @@ async function postInstagram(req, res) {
       return res.status(400).json({ error: 'Data gambar (imageBase64) wajib dikirim.' });
     }
 
-    // Pastikan PUBLIC_BASE_URL terisi DAN masuk akal — tanpa ini, Meta akan
-    // gagal fetch gambarnya dengan error 9004 yang jauh lebih sulit
-    // diretas daripada pesan konfigurasi di sini.
-    const publicBaseUrl = process.env.PUBLIC_BASE_URL;
-    if (!publicBaseUrl) {
-      return res.status(500).json({
-        error: 'PUBLIC_BASE_URL belum di-set di server. Set di Render: https://menfs.onrender.com',
-      });
-    }
-    if (!/^https?:\/\//.test(publicBaseUrl)) {
-      return res.status(500).json({
-        error: `PUBLIC_BASE_URL harus berawalan http:// atau https:// (sekarang: "${publicBaseUrl}").`,
-      });
-    }
-
     const menfes = await prisma.menfes.findUnique({ where: { id } });
     if (!menfes) {
       return res.status(404).json({ error: 'Menfes tidak ditemukan.' });
     }
 
-    // Dekode base64, toleran terhadap prefix data:image/jpeg;base64,
-    // termasuk whitespace / newline dari canvas.toDataURL.
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '').trim();
+    // Bersihkan header base64 jika ada (e.g. data:image/jpeg;base64,...)
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
-    if (imageBuffer.length === 0) {
-      return res.status(400).json({ error: 'Gambar kosong setelah didekode. Coba export ulang.' });
-    }
-    if (imageBuffer.length > MAX_IMAGE_BYTES) {
-      return res.status(400).json({
-        error: `Ukuran gambar ${(imageBuffer.length / 1024 / 1024).toFixed(1)}MB melebihi batas 8MB.`,
-      });
-    }
+    // Buat default caption jika tidak ada
+    const sender = menfes.senderName ? menfes.senderName : 'Seseorang';
+    const finalCaption = caption || `[MENFESS]\nDari: ${sender}\n\n"${menfes.message}"\n\n—\nKirim menfess kamu via link di bio!\n#menfess #harkatnekatt`;
 
-    // Pastikan folder uploads ada (Render bisa fresh setiap deploy).
-    if (!fs.existsSync(UPLOADS_DIR)) {
-      fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    }
-
-    // Nama file acak supaya tidak bentrok dan tidak bisa ditebak.
-    const fileName = `ig-${crypto.randomUUID()}.jpg`;
-    tmpPath = path.join(UPLOADS_DIR, fileName);
-    fs.writeFileSync(tmpPath, imageBuffer);
-
-    // URL yang akan di-fetch oleh server Meta.
-    // Slash digabung rapi supaya tidak muncul dua slash.
-    const imageUrl = `${publicBaseUrl.replace(/\/+$/, '')}/uploads/${fileName}`;
-
-    const sender = menfes.senderName || 'Seseorang';
-    const finalCaption =
-      caption ||
-      `[MENFESS]\nDari: ${sender}\n\n"${menfes.message}"\n\n—\nKirim menfess kamu via link di bio!\n#menfess #harkatnekatt`;
-
-    // ── Instagram Graph API: create container → tunggu FINISHED → publish ──
-    console.log('[IG] Membuat media container untuk menfes', {
-      menfesId: id,
-      imageUrl,
-      dryRun: ig.isDryRun(),
-    });
-
-    const { mediaId, permalink, containerId } = await ig.publishImage({
-      imageUrl,
+    // Kirim postingan via bot
+    const result = await instagramBot.publishPhoto({
+      imageBuffer,
       caption: finalCaption,
-      altText: `Menfes: ${menfes.message.slice(0, 100)}`,
     });
 
-    console.log('[IG] Publish sukses', { menfesId: id, mediaId, containerId });
-
-    // Approve HANYA setelah publish sukses. Kalau publish gagal, menfes
-    // tetap PENDING supaya bisa dicoba ulang tanpa efek samping ganda.
     let updated = menfes;
     if (autoApprove) {
       updated = await prisma.menfes.update({
@@ -268,87 +195,28 @@ async function postInstagram(req, res) {
       });
     }
 
-    return res.json({
+    res.json({
       success: true,
       message: 'Menfes berhasil diposting ke Instagram!',
       data: updated,
-      instagram: {
-        mediaId,
-        containerId,
-        // permalink tidak selalu dikembalikan API — kirim kalau ada saja.
-        ...(permalink ? { permalink } : {}),
-      },
+      instagram: result,
     });
   } catch (err) {
     console.error('Post to Instagram error:', err);
-
-    // Error konfigurasi (token/env) → 500, pesan sudah ramah dari service.
-    const status = err?.name === 'InstagramGraphError' && err?.code === 190 ? 401 : 500;
-    return res.status(status).json({
-      error: err.message || 'Gagal posting ke Instagram. Cek konfigurasi IG_* di Render.',
+    res.status(500).json({
+      error: err.message || 'Gagal posting ke Instagram. Pastikan akun & password di .env sudah benar.',
     });
-  } finally {
-    // Selalu buang file sementara, sukses maupun gagal.
-    if (tmpPath) {
-      try {
-        fs.unlinkSync(tmpPath);
-      } catch (cleanupErr) {
-        if (cleanupErr.code !== 'ENOENT') {
-          console.warn('[IG] Gagal hapus file sementara:', tmpPath, cleanupErr.message);
-        }
-      }
-    }
   }
 }
 
 /**
  * GET /api/admin/instagram/status
- * Cek konfigurasi Instagram TANPA memanggil Graph API.
- *
- * Kenapa tidak panggil API: setiap request /me akan membakar rate limit,
- * dan status endpoint ini dipanggil dari dashboard yang sering dibuka.
- * Untuk verifikasi token sungguhan, jalankan backend/scripts/ig-spike.mjs.
+ * Cek status konfigurasi dan koneksi Instagram
  */
 async function getInstagramStatus(req, res) {
   try {
-    const configured = Boolean(process.env.IG_USER_ID && process.env.IG_ACCESS_TOKEN);
-    const publicBaseUrl = process.env.PUBLIC_BASE_URL || null;
-
-    // Hitung sisa kuota publish hari ini kalau token ada.
-    let quota = null;
-    let account = null;
-    let quotaError = null;
-
-    if (configured && !ig.isDryRun()) {
-      try {
-        const [quotaRes, accountRes] = await Promise.allSettled([ig.getQuota(), ig.getAccountInfo()]);
-        if (quotaRes.status === 'fulfilled') {
-          quota = {
-            usage: quotaRes.value?.quota_usage,
-            total: quotaRes.value?.config?.quota_total,
-          };
-        } else {
-          quotaError = quotaRes.reason?.message || 'Gagal mengambil kuota.';
-        }
-        if (accountRes.status === 'fulfilled') {
-          account = accountRes.value;
-        }
-      } catch (e) {
-        quotaError = e.message;
-      }
-    }
-
-    res.json({
-      configured,
-      dryRun: ig.isDryRun(),
-      graphVersion: ig.GRAPH_VERSION,
-      publicBaseUrl,
-      // Upload dir — dipakai untuk diagnosa PUBLIC_BASE_URL yang salah.
-      uploadPath: UPLOADS_DIR,
-      account,
-      quota,
-      quotaError,
-    });
+    const status = instagramBot.getStatus();
+    res.json(status);
   } catch (err) {
     console.error('Instagram status error:', err);
     res.status(500).json({ error: 'Gagal mengecek status Instagram.' });

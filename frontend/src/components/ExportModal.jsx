@@ -602,6 +602,5 @@ export default function ExportModal({ menfes, onClose, onSuccess }) {
           </div>
         </div>
       </div>
-    </div>
-  );
+      );
 }
