@@ -37,11 +37,4 @@ export const adminAPI = {
 
   delete: (id) =>
     api.delete(`/admin/menfes/${id}`),
-
-  postInstagram: (id, { imageBase64, caption, autoApprove = true }) =>
-    api.post(`/admin/menfes/${id}/post-ig`, { imageBase64, caption, autoApprove }, { timeout: 120000 }),
-
-  getInstagramStatus: () =>
-    api.get('/admin/instagram/status'),
 };
-
