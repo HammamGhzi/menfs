@@ -12,7 +12,8 @@
     "db:migrate:deploy": "npx prisma migrate deploy",
     "db:generate": "npx prisma generate",
     "db:seed": "node prisma/seed.js",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "security-check": "node scripts/security-check.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -21,12 +22,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-rate-limit": "^7.4.1",
-    "express-validator": "^7.2.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "node-telegram-bot-api": "^0.66.0",
-    "uuid": "^10.0.0"
+    "node-telegram-bot-api": "^0.66.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",

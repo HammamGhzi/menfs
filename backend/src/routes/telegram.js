@@ -1,9 +1,52 @@
 const express = require('express');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { getBot, sendMessage } = require('../services/telegramBot');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const rateLimit = require('express-rate-limit');
+
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
+const ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+/**
+ * Verifikasi header X-Telegram-Bot-Api-Secret-Token.
+ *
+ * Tanpa cek ini, siapa pun yang tahu URL webhook bisa mengirim update palsu
+ * dan menyuruh bot menyetujui/menolak menfes, atau menulis pesan ke chat
+ * Telegram mana pun.
+ *
+ * Kalau TELEGRAM_WEBHOOK_SECRET belum diisi, endpoint ditutup total
+ * (fail-closed) — lebih baik webhook mati daripada terbuka untuk semua orang.
+ */
+function requireWebhookSecret(req, res, next) {
+  if (!WEBHOOK_SECRET) {
+    return res.status(503).json({
+      error: 'Webhook dinonaktifkan: TELEGRAM_WEBHOOK_SECRET belum diisi.',
+    });
+  }
+
+  const provided = req.get('X-Telegram-Bot-Api-Secret-Token') || '';
+  const a = Buffer.from(provided);
+  const b = Buffer.from(WEBHOOK_SECRET);
+
+  // Bandingkan dengan panjang tetap agar tahan timing attack
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(403).json({ error: 'Secret token tidak valid.' });
+  }
+
+  next();
+}
+
+// Batasi frekuensi supaya webhook tidak bisa dipakai sebagai amplifier
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { error: 'Terlalu banyak request ke webhook.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 /**
  * Daftarkan handler callback_query dari inline button Telegram.
@@ -30,6 +73,16 @@ function registerTelegramCallbacks() {
     const [action, menfesId] = data.split('_');
 
     if (!['approve', 'reject'].includes(action) || !menfesId) return;
+
+    // Hanya admin chat yang boleh memicu approve/reject. Bot tidak pernah
+    // mengirim notifikasi ke chat lain, jadi callback dari chat mana pun
+    // selain ini berarti update palsu.
+    if (ADMIN_CHAT_ID && String(message?.chat?.id) !== String(ADMIN_CHAT_ID)) {
+      console.warn(
+        `⚠️  Callback dari chat tidak dikenal (${message?.chat?.id}), diabaikan.`
+      );
+      return;
+    }
 
     try {
       // Cek apakah menfes masih PENDING
@@ -93,8 +146,11 @@ function registerTelegramCallbacks() {
  * POST /api/telegram/webhook
  * Endpoint opsional — tidak dipakai di polling mode,
  * tapi disiapkan untuk production webhook jika diperlukan.
+ *
+ * WAJIB menyertakan header X-Telegram-Bot-Api-Secret-Token yang cocok
+ * dengan TELEGRAM_WEBHOOK_SECRET (dikirim oleh Telegram, bukan publik).
  */
-router.post('/webhook', (req, res) => {
+router.post('/webhook', requireWebhookSecret, webhookLimiter, (req, res) => {
   const bot = getBot();
   if (bot) {
     bot.processUpdate(req.body);

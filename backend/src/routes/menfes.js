@@ -5,15 +5,15 @@ const { submitMenfes, getApprovedMenfes } = require('../controllers/menfesContro
 const router = express.Router();
 
 // Rate limit submit menfes — max 5x per 15 menit per IP
+// Jangan pakai X-Forwarded-For mentah: header itu dikontrol client dan
+// bisa dipalsukan tiap request untuk躲开 limit. Dengan 'trust proxy' di
+// src/index.js, req.ip sudah merupakan IP asli dari proxy.
 const submitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: { error: 'Terlalu banyak pengiriman. Coba lagi dalam 15 menit.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    return req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
-  },
 });
 
 // GET /api/menfes — Ambil menfes approved (publik)

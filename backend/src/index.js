@@ -14,6 +14,13 @@ const { initBot } = require('./services/telegramBot');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Di belakang reverse proxy (Render/Vercel/nginx), Express perlu tahu kalau
+// ada tepat 1 proxy di depan aplikasi supaya req.ip memakai X-Forwarded-For
+// yang benar. Tanpa ini, SEMUA permintaan dari satu proxy terhitung sebagai
+// satu IP: rate limit jadi tidak berguna, dan penyerang bisa memalsukan
+// X-Forwarded-For untuk lolos dari limit.
+app.set('trust proxy', 1);
+
 // ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },

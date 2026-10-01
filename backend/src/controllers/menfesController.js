@@ -33,9 +33,10 @@ async function submitMenfes(req, res) {
       return res.status(400).json({ error: 'Pesan maksimal 500 karakter.' });
     }
 
-    // Ambil IP pengirim (di-hash untuk privasi)
-    const rawIp = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || null;
-    const ipHash = hashIp(rawIp);
+    // Ambil IP pengirim (di-hash untuk privasi).
+    // req.ip sudah memperhitungkan 'trust proxy', jadi bukan header mentah
+    // yang bisa dipalsukan client.
+    const ipHash = hashIp(req.ip);
 
     // Simpan ke database
     const menfes = await prisma.menfes.create({
