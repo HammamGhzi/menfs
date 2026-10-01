@@ -13,7 +13,8 @@
     "db:generate": "npx prisma generate",
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio",
-    "security-check": "node scripts/security-check.cjs"
+    "security-check": "node scripts/security-check.cjs",
+    "scan-secrets": "node scripts/scan-secrets.cjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
