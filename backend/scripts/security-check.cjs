@@ -1,13 +1,30 @@
 /**
  * Security regression check — backend/.
  *
- * Menjalankan exploit nyata terhadap express app asli (TIDAK ada request
- * ke Telegram sungguhan; modulnya di-stub) lalu memeriksa whether
- * kerentanan yang sudah ditemukan masih ada atau sudah ditutup.
+ * Menjalankan exploit nyata terhadap express app asli (TIDAK ada ada request
+ * ke Telegram sungguhan; modulnya di-stub) lalu memeriksa apakah kerentanan
+ * yang sudah ditemukan masih ada atau sudah ditutup.
  *
- * Jalankan:  node scripts/security-check.cjs
+ * Jalankan:  npm run security-check
  *
- * Exit code 0 = semua secure. Exit 1 = ada yang masih bocor.
+ * Exit code 0 = semua lolos. Exit 1 = ada yang masih bocor.
+ *
+ * ── CAKUPAN DAN BATASNYA ────────────────────────────────────────────────
+ * Script ini berjalan di localhost, TANPA reverse proxy sungguhan. Itu
+ * berarti:
+ *
+ *  - Cek "trust proxy" hanya membuktikan bahwa express-rate-limit memakai
+ *    entri X-Forwarded-For paling kanan. Itu halves yang benar untuk
+ *    konfigurasi Render, tapi TIDAK membuktikan bahwa Render benar-benar
+ *    menambahkan IP asli di ujung kanan. Kalau suatu saat Render meneruskan
+ *    XFF apa adanya, penyerang bisa memalsukan XFF dan lolos limit.
+ *    Verifikasi produksi harus dijalankan dari luar (lihat catatan di
+ *    commit message fix(security)).
+ *
+ *  - express-rate-limit memakai MemoryStore (in-memory per-process). Kalau
+ *    Render menjalankan lebih dari satu instance, tiap instance punya bucket
+ *    sendiri sehingga limit efektif menjadi max x jumlah-instance.
+ *    Script ini tidak bisa mengukur itu; hanya bisa dicek dari luar.
  */
 'use strict';
 
@@ -165,9 +182,17 @@ const check = (name, secure, extra = '') => {
     });
     if (r.status === 201) createdSpoof++;
   }
-  check('Spoofing XFF tidak/Create bucket baru (proxy menambahkan IP asli di kanan)',
+  // CATATAN PENTING:
+  // Skenario ini hanya meaningful kalau ada proxy tepercaya yang MENAMBAHKAN
+  // IP asli di ujung kanan X-Forwarded-For (seperti Render). Di lingkungan
+  // lokal tidak ada proxy sungguhan, jadi test ini memverifikasi bahwa
+  // express-rate-limit memakai entri paling kanan (trust proxy=1) —
+  // bukan membuktikan keamanan produksi.
+  //
+  // Verifikasi produksi wajib dilakukan dari luar; lihat catatan di README.
+  check('trust proxy=1 memakai entri XFF paling kanan (lihat catatan produksi)',
     createdSpoof <= 5,
-    `created=${createdSpoof}/10 dengan IP asli sama (limit 5/15 menit)`);
+    `created=${createdSpoof}/10 dengan IP kanan sama`);
 
   // ═══ 3. CORS tetap ketat ══════════════════════════════════════════════
   console.log('\n── 3. CORS ──');

@@ -5,9 +5,9 @@ const { submitMenfes, getApprovedMenfes } = require('../controllers/menfesContro
 const router = express.Router();
 
 // Rate limit submit menfes — max 5x per 15 menit per IP
-// Jangan pakai X-Forwarded-For mentah: header itu dikontrol client dan
-// bisa dipalsukan tiap request untuk躲开 limit. Dengan 'trust proxy' di
-// src/index.js, req.ip sudah merupakan IP asli dari proxy.
+// Jangan pakai X-Forwarded-For mentah: header itu dikontrol client dan bisa
+// dipalsukan tiap request untuk lolos dari limit. Dengan 'trust proxy' yang
+// diset di src/index.js, req.ip sudah memperhitungkan proxy di depan.
 const submitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
