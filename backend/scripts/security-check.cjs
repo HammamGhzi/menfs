@@ -1,7 +1,7 @@
 /**
  * Security regression check — backend/.
  *
- * Menjalankan exploit nyata terhadap express app asli (TIDAK ada ada request
+ * Menjalankan exploit nyata terhadap express app asli (TIDAK ada request
  * ke Telegram sungguhan; modulnya di-stub) lalu memeriksa apakah kerentanan
  * yang sudah ditemukan masih ada atau sudah ditutup.
  *
@@ -14,7 +14,7 @@
  * berarti:
  *
  *  - Cek "trust proxy" hanya membuktikan bahwa express-rate-limit memakai
- *    entri X-Forwarded-For paling kanan. Itu halves yang benar untuk
+ *    entri X-Forwarded-For paling kanan. Itu bagian yang benar untuk
  *    konfigurasi Render, tapi TIDAK membuktikan bahwa Render benar-benar
  *    menambahkan IP asli di ujung kanan. Kalau suatu saat Render meneruskan
  *    XFF apa adanya, penyerang bisa memalsukan XFF dan lolos limit.
@@ -24,7 +24,10 @@
  *  - express-rate-limit memakai MemoryStore (in-memory per-process). Kalau
  *    Render menjalankan lebih dari satu instance, tiap instance punya bucket
  *    sendiri sehingga limit efektif menjadi max x jumlah-instance.
- *    Script ini tidak bisa mengukur itu; hanya bisa dicek dari luar.
+ *    Terverifikasi di produksi: max=5 dengan 2 instance -> 10 lolos, dengan
+ *    X-RateLimit-Remaining naik lagi dari 0 ke 1 di tengah window. Karena
+ *    itu RATE_LIMIT_MAX_SUBMIT ada di .env.example: angka itu perlu dibagi
+ *    jumlah instance yang aktif.
  */
 'use strict';
 
@@ -161,8 +164,9 @@ const check = (name, secure, extra = '') => {
     });
     if (r.status === 201) createdSame++;
   }
-  check('Rate limit berlaku untuk IP yang sama (XFF konsisten)', createdSame <= 5,
-    `created=${createdSame}/10 (limit 5/15 menit)`);
+  const submitMax = Number(process.env.RATE_LIMIT_MAX_SUBMIT) || 3;
+  check('Rate limit berlaku untuk IP yang sama (XFF konsisten)', createdSame <= submitMax,
+    `created=${createdSame}/10 (max=${submitMax})`);
 
   // Skenario B: simulasi Render. Render MENERUSKAN X-Forwarded-For milik
   // client lalu MENAMBAHKAN IP asli di ujung kanan:
@@ -191,8 +195,8 @@ const check = (name, secure, extra = '') => {
   //
   // Verifikasi produksi wajib dilakukan dari luar; lihat catatan di README.
   check('trust proxy=1 memakai entri XFF paling kanan (lihat catatan produksi)',
-    createdSpoof <= 5,
-    `created=${createdSpoof}/10 dengan IP kanan sama`);
+    createdSpoof <= submitMax,
+    `created=${createdSpoof}/10 dengan IP kanan sama (max=${submitMax})`);
 
   // ═══ 3. CORS tetap ketat ══════════════════════════════════════════════
   console.log('\n── 3. CORS ──');
