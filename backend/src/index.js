@@ -44,8 +44,11 @@ app.use(cors({
 }));
 
 // ─── Body Parser ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// 3MB cukup: request terbesar Only adalah gambar hasil render canvas
+// (1080x1350 JPEG ≈ 300-600KB, jadi base64 ≈ 400-800KB).
+// Jangan naikkan tanpa alasan — ini batas serang DoS yang murah.
+app.use(express.json({ limit: '3mb' }));
+app.use(express.urlencoded({ extended: true, limit: '3mb' }));
 
 // ─── Serve uploaded template ──────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

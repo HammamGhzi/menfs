@@ -38,8 +38,13 @@ export const adminAPI = {
   delete: (id) =>
     api.delete(`/admin/menfes/${id}`),
 
+  // Timeout panjang WAJIB di sini. Backend menunggu container Instagram
+  // sampai status_code=FINISHED (poll 1x/menit, maks 5x) sebelum publish.
+  // Timeout pendek akan memutus request di tengah jalan, dan karena
+  // media_publish tidak idempotent, user bisa pressed retry lalu dapat
+  // postingan duplikat.
   postInstagram: (id, { imageBase64, caption, autoApprove = true }) =>
-    api.post(`/admin/menfes/${id}/post-ig`, { imageBase64, caption, autoApprove }, { timeout: 120000 }),
+    api.post(`/admin/menfes/${id}/post-ig`, { imageBase64, caption, autoApprove }, { timeout: 360000 }),
 
   getInstagramStatus: () =>
     api.get('/admin/instagram/status'),
