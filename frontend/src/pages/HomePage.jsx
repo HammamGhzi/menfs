@@ -205,7 +205,7 @@ export default function HomePage() {
               </div>
 
               {/* 2. Pratinjau Langsung Gambar Template Asli */}
-              {showPreview && (step === 1 || step === 2) && (
+              {showPreview && (step === 1 || step === 2 || step === 3) && (
                 <div className="p-3.5 sm:p-4 rounded-xl bg-ink-900/90 border border-ink-600 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between border-b border-ink-700 pb-2">
                     <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest">
