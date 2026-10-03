@@ -256,9 +256,8 @@ export default function AdminDashboardPage() {
                             <p className="text-[10px] font-mono font-bold text-ink-500 tracking-widest uppercase">
                               Info Pengirim
                             </p>
-                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-ink-700 border-ink-500 text-parchment-300 flex items-center gap-1">
-                              <span>🎨</span>
-                              <span>{tmpl.badge}</span>
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-ink-700 border-ink-500 text-parchment-300">
+                              {tmpl.badge}
                             </span>
                           </div>
                           {item.senderName && (

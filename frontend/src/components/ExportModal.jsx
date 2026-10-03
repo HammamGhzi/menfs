@@ -190,7 +190,7 @@ export default function ExportModal({ menfes, onClose }) {
       a.download = `menfes-${currentTemplate.id}-${Date.now()}.jpg`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(`Gambar template ${currentTemplate.name} didownload! 🎉`);
+      toast.success(`Gambar template ${currentTemplate.name} berhasil diunduh.`);
     } catch (err) {
       toast.error('Gagal download gambar.');
       console.error(err);
@@ -297,8 +297,8 @@ export default function ExportModal({ menfes, onClose }) {
           {/* Pemilih Template */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-mono font-semibold text-parchment-300 tracking-wider uppercase flex items-center gap-1.5">
-                <span>🎨</span> Pilih Template Background:
+              <label className="text-xs font-mono font-semibold text-parchment-300 tracking-wider uppercase">
+                Pilih Template Background:
               </label>
               <span className="text-[11px] font-mono text-brand-400 bg-brand-950/60 border border-brand-800/60 px-2 py-0.5 rounded-md">
                 {currentTemplate.name}
@@ -350,7 +350,7 @@ export default function ExportModal({ menfes, onClose }) {
           {/* Status template background */}
           {bgStatus === 'error' && (
             <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-3 text-xs text-amber-400 font-mono">
-              ⚠️ File template tidak ditemukan — beralih ke fallback render.
+              File template tidak ditemukan — beralih ke fallback render.
             </div>
           )}
 

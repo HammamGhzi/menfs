@@ -59,7 +59,6 @@ export default function MenfesCard() {
         </div>
       ) : menfes.length === 0 ? (
         <div className="card text-center py-10 border-ink-600">
-          <div className="text-3xl mb-2">📭</div>
           <p className="text-sm text-ink-400 font-mono">Belum ada menfess yang disetujui.</p>
         </div>
       ) : (

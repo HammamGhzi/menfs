@@ -181,8 +181,8 @@ export default function HomePage() {
               {showPreview && (
                 <div className="p-3.5 sm:p-4 rounded-xl bg-ink-900/90 border border-ink-600 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between border-b border-ink-700 pb-2">
-                    <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest flex items-center gap-1.5">
-                      <span>🖼️</span> Pratinjau Template Nyata ({selectedTemplate.name})
+                    <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest">
+                      Pratinjau Template Nyata ({selectedTemplate.name})
                     </p>
                     <span className="text-[10px] font-mono text-ink-400">
                       Live Canvas
@@ -321,7 +321,7 @@ export default function HomePage() {
               Sedang menunggu persetujuan admin sebelum diexport ke Instagram feed.
             </p>
             <div className="inline-flex items-center gap-2 bg-ink-800 border border-ink-600 px-3 py-1.5 rounded-full text-xs font-mono text-parchment-300">
-              <span>🎨 Template:</span>
+              <span>Template:</span>
               <strong className="text-brand-400">{lastSubmittedTemplate}</strong>
             </div>
             <div>
