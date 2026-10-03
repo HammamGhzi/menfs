@@ -1,6 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { login, me, changePassword } = require('../controllers/authController');
+const { login, me, changePassword, logout } = require('../controllers/authController');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
@@ -22,5 +22,9 @@ router.get('/me', authMiddleware, me);
 
 // POST /api/auth/change-password (butuh token)
 router.post('/change-password', authMiddleware, changePassword);
+
+// POST /api/auth/logout (butuh token)
+// Membatalkan semua token yang pernah terbit, bukan hanya milik pemanggil.
+router.post('/logout', authMiddleware, logout);
 
 module.exports = router;

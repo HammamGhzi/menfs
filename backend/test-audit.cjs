@@ -67,7 +67,7 @@ const auditLines = () =>
   console.log('── 1. jejak login ──');
   captured = [];
   let r = await req('/api/auth/login', { method: 'POST', body: { username: USER, password: PASS } });
-  const token = r.body?.token;
+  let token = r.body?.token;
   check('login sukses (HTTP 200)', r.status === 200, `HTTP ${r.status}`);
 
   let lines = auditLines();
@@ -189,6 +189,13 @@ const auditLines = () =>
   check('password BARU tidak bocor ke log', !pwLine.includes(NEW_PASS));
   check('password LAMA tidak bocor ke log', !pwLine.includes(PASS));
   check('hanya panjangnya yang dicatat', pwLine.includes('"newLength"'));
+
+  // Ganti password sekarang membatalkan token yang memakainya, jadi langkah
+  // berikutnya harus memakai token pengganti dari respons di atas.
+  // Memakai token lama di sini akan gagal dengan 401.
+  const tokenBaru = r.body?.token;
+  check('ganti password mengembalikan token pengganti', !!tokenBaru);
+  if (tokenBaru) token = tokenBaru;
 
   // ─── 6. audit tidak boleh menjatuhkan request ──────────────────────────────
   console.log('\n── 6. ketahanan: logging gagal tidak boleh mematikan request ──');

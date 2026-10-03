@@ -18,9 +18,9 @@ export function AuthProvider({ children }) {
         // Verifikasi token ke server di background
         authAPI.me()
           .then(({ data }) => setAdmin(data.admin))
-          .catch(() => logout());
+          .catch(() => clearSession());
       } catch {
-        logout();
+        clearSession();
       }
     }
     setLoading(false);
@@ -34,10 +34,30 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  function logout() {
+  // Membersihkan sesi di sisi browser saja, tanpa menyentuh server.
+  // Dipakai saat token sudah tidak berlaku atau server tidak bisa dihubungi:
+  // memanggil API logout di sana hanya menambah permintaan yang pasti gagal.
+  function clearSession() {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     setAdmin(null);
+  }
+
+  // Logout sungguhan: server membatalkan SEMUA token yang pernah terbit.
+  // Sebelumnya logout hanya menghapus token dari localStorage, sehingga
+  // tokennya tetap sah sampai kedaluwarsa dan siapa pun yang memegangnya
+  // masih bisa memakainya.
+  //
+  // Local storage tetap dibersihkan apa pun hasil server: kalau network mati
+  // atau token sudah dicabut, pengguna tetap harus dikeluarkan dari panel.
+  async function logout() {
+    try {
+      await authAPI.logout();
+    } catch {
+      // diabaikan: clearSession di bawah yang menentukan perilaku
+    } finally {
+      clearSession();
+    }
   }
 
   return (

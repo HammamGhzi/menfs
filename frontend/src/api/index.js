@@ -10,6 +10,12 @@ export const authAPI = {
 
   changePassword: (currentPassword, newPassword) =>
     api.post('/auth/change-password', { currentPassword, newPassword }),
+
+  // Memanggil ini membatalkan SEMUA token yang pernah terbit, bukan hanya
+  // token milik pemanggil. Untuk panel satu admin itu menguntungkan: token
+  // yang dicuri ikut mati saat pemilik logout.
+  logout: () =>
+    api.post('/auth/logout'),
 };
 
 // ─── Menfes Publik ────────────────────────────────────────────────────────

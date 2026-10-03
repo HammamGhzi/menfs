@@ -52,6 +52,8 @@ const check = (name, pass, extra = '') => {
       body: body ? JSON.stringify(body) : undefined,
     }).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
 
+  const me = (token) => call('/api/auth/me', { token });
+
   const login = (username, password) =>
     call('/api/auth/login', { method: 'POST', body: { username, password } });
 
@@ -72,7 +74,7 @@ const check = (name, pass, extra = '') => {
     r.status === 401, `HTTP ${r.status}`);
   r = await login(USER, PASS);
   check('password asli 16 byte tetap bisa login', r.status === 200, `HTTP ${r.status}`);
-  const token = r.body && r.body.token;
+  let token = r.body && r.body.token;
 
   // ─── 3. multibyte: .length bukan ukuran yang benar ─────────────────────────
   console.log('\n── 3. multibyte: yang diukur byte, bukan .length ──');
@@ -140,11 +142,23 @@ const check = (name, pass, extra = '') => {
   });
   check('password baru 72 byte diterima', r.status === 200, `HTTP ${r.status}`);
 
+  // Ganti password yang berhasil membatalkan token yang memakainya, jadi
+  // token di bawah harus diganti dengan yang dikembalikan respons. Tanpa ini
+  // setiap permintaan berikutnya gagal 401 karena alasan yang salah, dan
+  // assertion "attack gagal" jadi lolos karena token basi, bukan karena
+  // serangannya benar-benar ditolak.
+  const tokenSetelah72 = r.body?.token;
+  check('ganti password mengembalikan token pengganti', !!tokenSetelah72);
+  if (tokenSetelah72) token = tokenSetelah72;
+
   // kembalikan ke PASS supaya sisa test tidak compounding
-  await call('/api/auth/change-password', {
+  const kembaliKePass = await call('/api/auth/change-password', {
     method: 'POST', token,
     body: { currentPassword: 'B'.repeat(72), newPassword: PASS },
   });
+  check('password dikembalikan ke nilai semula', kembaliKePass.status === 200,
+    `HTTP ${kembaliKePass.status}`);
+  if (kembaliKePass.body?.token) token = kembaliKePass.body.token;
 
   // ─── 6. THE POINT: serangan truncation tidak bisa disediakan ───────────────
   console.log('\n── 6. serangan truncation tidak bisa disiapkan ──');
@@ -158,6 +172,13 @@ const check = (name, pass, extra = '') => {
   });
   check('tidak bisa membuat password > 72 byte lewat change-password',
     setLong.status === 400, `HTTP ${setLong.status}`);
+  // Password tidak berubah, jadi token di sini masih yang benar. Pemeriksaan
+  // ini penting: tanpa itu, assertion "attack gagal" di bawah bisa lolos
+  // hanya karena token-nya sudah mati karena alasan lain.
+  const tokenMasihSegar = await me(token);
+  check('token masih sah sesudah percobaan ditolak (kontrol)',
+    tokenMasihSegar.status === 200,
+    `HTTP ${tokenMasihSegar.status} - kalau bukan 200, test di bawah tidak membuktikan apa pun`);
 
   const kosongkan = await login(USER, depan);
   check('akun masih memakai password yang sebenarnya (attack gagal)',

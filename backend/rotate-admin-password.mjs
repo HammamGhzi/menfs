@@ -5,10 +5,15 @@
  * kredensial asli. Script ini melakukan:
  *   1. login pakai password lama
  *   2. ganti ke password baru yang di-generate
- *   3. logout-mu: print password baru untuk disimpan di password manager
+ *   3. tampilkan password baru untuk disimpan di password manager
  *
  * Jalankan:  node rotate-admin-password.mjs
  * Akan meminta password lama secara interaktif (tidak tersimpan di history).
+ *
+ * Efek samping yang sekarang terjadi: mengganti password juga membatalkan
+ * SEMUA token yang sudah ada. Sebelumnya token yang dicuri tetap berlaku
+ * sampai 24 jam setelah password diganti. Jadi kalau ini dijalankan karena
+ * password dicurigai bocor, token yang bocor ikut mati di saat yang sama.
  */
 import readline from 'node:readline';
 import crypto from 'node:crypto';
@@ -99,6 +104,7 @@ console.log('  1. Simpan password di atas sekarang juga.');
 console.log('  2. Hapus file ini setelah tidak dipakai lagi.');
 console.log('  3. Verifikasi: buka admin panel, login dengan password baru.');
 console.log('  4. Password lama (admin123) sudah tidak berlaku.');
+console.log('  5. Semua sesi login lain ikut batal, termasuk sesi yang dibajak.');
 
 rl.close();
 process.exit(0);
