@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { menfesAPI } from '../api';
 import { TEMPLATES, getTemplateById } from '../config/templates';
@@ -17,9 +17,18 @@ export default function HomePage() {
   const [submitted, setSubmitted] = useState(false);
   const [lastSubmittedTemplate, setLastSubmittedTemplate] = useState('Classic Dark');
   const [step, setStep] = useState(1);
+  const [darkMode, setDarkMode] = useState(false);
 
   const selectedTemplate = getTemplateById(selectedTemplateId);
   const remaining = MAX_CHARS - message.length;
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -70,44 +79,53 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-ink-800">
+    <div className="min-h-screen bg-parchment-100 dark:bg-ink-800">
       {/* Header */}
-      <header className="bg-ink-900/95 backdrop-blur-sm border-b border-ink-600 sticky top-0 z-10">
+      <header className="bg-white/95 dark:bg-ink-900/95 backdrop-blur-sm border-b border-parchment-300 dark:border-ink-600 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src="/template/logo.jpg" alt="Logo" className="w-7 h-7 rounded-full border border-ink-500 object-cover" />
+            <img src="/template/logo.jpg" alt="Logo" className="w-7 h-7 rounded-full border border-parchment-300 dark:border-ink-500 object-cover" />
             <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-none">
-              <span className="text-parchment-200">HARKAT</span>{' '}
+              <span className="text-ink-900 dark:text-parchment-200">HARKAT</span>{' '}
               <span className="text-brand-600 relative">
                 NEKATT
                 <span className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-brand-700 rounded-full" />
               </span>
             </h1>
           </div>
-          <span className="text-[11px] font-mono text-ink-200 bg-ink-800 border border-ink-400 px-2.5 py-1 rounded-full">
-            Menfess Kampus
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setDarkMode(v => !v)}
+              className="flex items-center gap-1.5 text-[11px] font-mono text-ink-500 dark:text-ink-200 bg-parchment-100 dark:bg-ink-800 border border-parchment-300 dark:border-ink-400 px-2.5 py-1 rounded-full"
+            >
+              {darkMode ? 'Light' : 'Dark'}
+            </button>
+            <span className="text-[11px] font-mono text-ink-500 dark:text-ink-200 bg-parchment-100 dark:bg-ink-800 border border-parchment-300 dark:border-ink-400 px-2.5 py-1 rounded-full">
+              Menfess Kampus
+            </span>
+          </div>
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Hero */}
         <div className="text-center space-y-2 sm:space-y-3 py-2 sm:py-4">
-          <p className="text-parchment-500 font-mono text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase">
+          <p className="text-ink-500 dark:text-parchment-500 font-mono text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase">
             The pen is mightier than the sword.
           </p>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            <span className="text-parchment-100">Kirim </span>
+            <span className="text-ink-900 dark:text-parchment-100">Kirim </span>
             <span className="text-brand-600">Menfess</span>
           </h2>
-          <p className="text-xs sm:text-sm text-parchment-300 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-ink-700 dark:text-parchment-300 max-w-md mx-auto">
             Pilih template desain kesukaanmu, tulis pesan, dan lihat pratinjau langsung!
           </p>
         </div>
 
         {/* Form */}
         {!submitted ? (
-          <div className="card border-ink-600 p-4 sm:p-6 space-y-5">
+          <div className="card border-parchment-300 dark:border-ink-600 p-4 sm:p-6 space-y-5">
             <form onSubmit={handleSubmit} className="space-y-5">
 
               {/* Mobile wizard steps */}
@@ -119,20 +137,20 @@ export default function HomePage() {
                     onClick={() => setStep(s)}
                     className={`w-8 h-8 rounded-full text-xs font-mono font-bold border transition-colors ${
                       step === s
-                        ? 'bg-brand-700 border-brand-600 text-parchment-100'
-                        : 'bg-ink-800 border-ink-600 text-ink-300 hover:text-parchment-300'
+                        ? 'bg-brand-700 border-brand-600 text-ink-900 dark:text-parchment-100'
+                        : 'bg-parchment-100 dark:bg-ink-800 border-parchment-300 dark:border-ink-600 text-ink-400 dark:text-ink-300 hover:text-ink-700 dark:text-parchment-300'
                     }`}
                   >
                     {s}
                   </button>
                 ))}
-                <span className="ml-2 text-xs text-ink-300 font-mono">{stepTitles[step]}</span>
+                <span className="ml-2 text-xs text-ink-400 dark:text-ink-300 font-mono">{stepTitles[step]}</span>
               </div>
 
               {/* 1. Pilih Template Menfess */}
               <div className={`space-y-2.5 ${step === 1 ? '' : 'hidden sm:block'}`}>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
+                  <label className="block text-xs font-semibold text-ink-700 dark:text-parchment-300 font-mono uppercase tracking-widest">
                     Pilih Template Desain
                   </label>
                   <span className="text-[11px] font-mono text-brand-400 bg-brand-950/70 border border-brand-700/60 px-2.5 py-0.5 rounded-md font-semibold">
@@ -150,12 +168,12 @@ export default function HomePage() {
                         onClick={() => setSelectedTemplateId(tmpl.id)}
                         className={`relative p-2 rounded-xl border text-left transition-all duration-200 flex flex-col items-center gap-2 group ${
                           isSelected
-                            ? 'bg-ink-800 border-brand-500 ring-2 ring-brand-500/40 shadow-xl scale-[1.02]'
-                            : 'bg-ink-800/80 border-ink-600 hover:border-ink-500 hover:bg-ink-800 opacity-85 hover:opacity-100'
+                            ? 'bg-parchment-100 dark:bg-ink-800 border-brand-500 ring-2 ring-brand-500/40 shadow-xl scale-[1.02]'
+                            : 'bg-white/80 dark:bg-ink-800/80 border-parchment-300 dark:border-ink-600 hover:border-parchment-300 dark:border-ink-500 hover:bg-parchment-200 dark:hover:bg-ink-800 opacity-85 hover:opacity-100'
                         }`}
                       >
                         {/* Thumbnail image portrait agar terlihat jelas wujud aslinya */}
-                        <div className="w-full aspect-[3/4] rounded-lg overflow-hidden bg-black/60 border border-ink-600 flex items-center justify-center relative shadow-inner">
+                        <div className="w-full aspect-[3/4] rounded-lg overflow-hidden bg-black/60 border border-parchment-300 dark:border-ink-600 flex items-center justify-center relative shadow-inner">
                           <img
                             src={tmpl.thumbnail}
                             alt={tmpl.name}
@@ -171,10 +189,10 @@ export default function HomePage() {
 
                         {/* Text info dengan warna kontras */}
                         <div className="text-center w-full px-0.5">
-                          <p className={`text-xs font-mono font-bold truncate ${isSelected ? 'text-parchment-100' : 'text-parchment-300'}`}>
+                          <p className={`text-xs font-mono font-bold truncate ${isSelected ? 'text-ink-900 dark:text-parchment-100' : 'text-ink-700 dark:text-parchment-300'}`}>
                             {tmpl.badge}
                           </p>
-                          <p className="text-[10px] text-parchment-400 font-mono truncate font-medium">
+                          <p className="text-[10px] text-ink-600 dark:text-parchment-400 font-mono truncate font-medium">
                             {tmpl.tag}
                           </p>
                         </div>
@@ -182,7 +200,7 @@ export default function HomePage() {
                         {/* Selected badge */}
                         {isSelected && (
                           <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-brand-600 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">
-                            ✓
+                            âœ“
                           </div>
                         )}
                       </button>
@@ -191,7 +209,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-mono pt-0.5">
-                  <p className="text-parchment-400 text-[11px]">
+                  <p className="text-ink-600 dark:text-parchment-400 text-[11px]">
                     {selectedTemplate.description}
                   </p>
                   <button
@@ -199,19 +217,19 @@ export default function HomePage() {
                     onClick={() => setShowPreview(!showPreview)}
                     className="text-brand-400 hover:text-brand-300 font-semibold transition-colors flex items-center gap-1 text-[11px] shrink-0 ml-2"
                   >
-                    <span>{showPreview ? '▲ Sembunyikan Pratinjau' : '▼ Lihat Pratinjau Gambar Asli'}</span>
+                    <span>{showPreview ? 'â–² Sembunyikan Pratinjau' : 'â–¼ Lihat Pratinjau Gambar Asli'}</span>
                   </button>
                 </div>
               </div>
 
               {/* 2. Pratinjau Langsung Gambar Template Asli */}
               {showPreview && (step === 1 || step === 2 || step === 3) && (
-                <div className="p-3.5 sm:p-4 rounded-xl bg-ink-900/90 border border-ink-600 space-y-2 animate-fadeIn">
-                  <div className="flex items-center justify-between border-b border-ink-700 pb-2">
-                    <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white/90 dark:bg-ink-900/90 border border-parchment-300 dark:border-ink-600 space-y-2 animate-fadeIn">
+                  <div className="flex items-center justify-between border-b border-parchment-300 dark:border-ink-700 pb-2">
+                    <p className="text-[11px] font-mono font-bold text-ink-700 dark:text-parchment-300 uppercase tracking-widest">
                       Pratinjau Template Nyata ({selectedTemplate.name})
                     </p>
-                    <span className="text-[10px] font-mono text-ink-200">
+                    <span className="text-[10px] font-mono text-ink-500 dark:text-ink-200">
                       Live Canvas
                     </span>
                   </div>
@@ -230,7 +248,7 @@ export default function HomePage() {
               <div className={`${step === 2 ? '' : 'hidden sm:block'}`}>
                 <label
                   htmlFor="message"
-                  className="block text-xs font-semibold text-parchment-300 mb-2 font-mono uppercase tracking-widest"
+                  className="block text-xs font-semibold text-ink-700 dark:text-parchment-300 mb-2 font-mono uppercase tracking-widest"
                 >
                   Pesan Menfess
                 </label>
@@ -247,15 +265,15 @@ export default function HomePage() {
                     aria-label="Isi pesan menfess"
                     style={{ fontSize: '16px' /* cegah zoom iOS */ }}
                   />
-                  <span className={`absolute right-3 bottom-2 text-[11px] font-mono ${remaining < 50 ? 'text-brand-500 font-bold' : 'text-parchment-400'}`}>
+                  <span className={`absolute right-3 bottom-2 text-[11px] font-mono ${remaining < 50 ? 'text-brand-500 font-bold' : 'text-ink-600 dark:text-parchment-400'}`}>
                     {remaining}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-xs mt-1 font-mono">
-                  <span className="text-[11px] text-ink-200">
+                  <span className="text-[11px] text-ink-500 dark:text-ink-200">
                     Teks otomatis di-wrap ke template di atas
                   </span>
-                  <span className="text-parchment-400 text-[11px]">
+                  <span className="text-ink-600 dark:text-parchment-400 text-[11px]">
                     {MAX_CHARS - message.length}/{MAX_CHARS}
                   </span>
                 </div>
@@ -263,7 +281,7 @@ export default function HomePage() {
 
               {/* 4. Pilihan Pengirim */}
               <div className={`space-y-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
-                <p className="text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
+                <p className="text-xs font-semibold text-ink-700 dark:text-parchment-300 font-mono uppercase tracking-widest">
                   Tampil Sebagai
                 </p>
 
@@ -274,8 +292,8 @@ export default function HomePage() {
                     onClick={() => setIsAnon(true)}
                     className={`py-3 sm:py-2.5 px-3 rounded-xl border text-xs font-mono font-semibold transition-all ${
                       isAnon
-                        ? 'bg-brand-700 border-brand-600 text-parchment-100 shadow-md'
-                        : 'bg-ink-800 border-ink-600 text-parchment-400 hover:text-parchment-200 hover:border-ink-500'
+                        ? 'bg-brand-700 border-brand-600 text-ink-900 dark:text-parchment-100 shadow-md'
+                        : 'bg-parchment-100 dark:bg-ink-800 border-parchment-300 dark:border-ink-600 text-ink-600 dark:text-parchment-400 hover:text-ink-900 dark:text-parchment-200 hover:border-parchment-300 dark:border-ink-500'
                     }`}
                   >
                     Dari Seseorang (Anonim)
@@ -285,8 +303,8 @@ export default function HomePage() {
                     onClick={() => setIsAnon(false)}
                     className={`py-3 sm:py-2.5 px-3 rounded-xl border text-xs font-mono font-semibold transition-all ${
                       !isAnon
-                        ? 'bg-brand-700 border-brand-600 text-parchment-100 shadow-md'
-                        : 'bg-ink-800 border-ink-600 text-parchment-400 hover:text-parchment-200 hover:border-ink-500'
+                        ? 'bg-brand-700 border-brand-600 text-ink-900 dark:text-parchment-100 shadow-md'
+                        : 'bg-parchment-100 dark:bg-ink-800 border-parchment-300 dark:border-ink-600 text-ink-600 dark:text-parchment-400 hover:text-ink-900 dark:text-parchment-200 hover:border-parchment-300 dark:border-ink-500'
                     }`}
                   >
                     Tulis Nama
@@ -308,7 +326,7 @@ export default function HomePage() {
                       autoFocus
                       style={{ fontSize: '16px' /* cegah zoom iOS */ }}
                     />
-                    <div className="text-right text-xs mt-1 font-mono text-parchment-400">
+                    <div className="text-right text-xs mt-1 font-mono text-ink-600 dark:text-parchment-400">
                       {MAX_NAME - senderName.length} karakter tersisa
                     </div>
                   </div>
@@ -321,29 +339,29 @@ export default function HomePage() {
                   <button
                     type="button"
                     onClick={() => setStep(step - 1)}
-                    className="text-xs font-mono text-ink-300 hover:text-parchment-200"
+                    className="text-xs font-mono text-ink-400 dark:text-ink-300 hover:text-ink-900 dark:text-parchment-200"
                   >
-                    ← Kembali
+                    â† Kembali
                   </button>
                 )}
                 {step < 3 && (
                   <button
                     type="button"
                     onClick={() => setStep(step + 1)}
-                    className="ml-auto px-4 py-2 bg-brand-700 text-parchment-100 text-xs font-mono font-semibold rounded-lg"
+                    className="ml-auto px-4 py-2 bg-brand-700 text-ink-900 dark:text-parchment-100 text-xs font-mono font-semibold rounded-lg"
                   >
-                    Lanjut →
+                    Lanjut â†’
                   </button>
                 )}
               </div>
 
               {/* Info Privasi */}
-              <div className={`bg-ink-800/90 border border-ink-600 rounded-xl p-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
-                <p className="text-xs text-parchment-300 flex items-center gap-2">
+              <div className={`bg-white/80 dark:bg-ink-800/90 border border-parchment-300 dark:border-ink-600 rounded-xl p-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
+                <p className="text-xs text-ink-700 dark:text-parchment-300 flex items-center gap-2">
                   <svg className="w-4 h-4 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <span>Identitasmu <strong className="text-parchment-100">100% aman & anonim</strong></span>
+                  <span>Identitasmu <strong className="text-ink-900 dark:text-parchment-100">100% aman & anonim</strong></span>
                 </p>
               </div>
 
@@ -370,11 +388,11 @@ export default function HomePage() {
             <svg className="w-12 h-12 text-brand-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <h3 className="text-xl font-bold text-parchment-200">Menfess Berhasil Dikirim!</h3>
-            <p className="text-parchment-300 text-sm">
+            <h3 className="text-xl font-bold text-ink-900 dark:text-parchment-200">Menfess Berhasil Dikirim!</h3>
+            <p className="text-ink-700 dark:text-parchment-300 text-sm">
               Sedang menunggu persetujuan admin sebelum diexport ke Instagram feed.
             </p>
-            <div className="inline-flex items-center gap-2 bg-ink-800 border border-ink-600 px-3 py-1.5 rounded-full text-xs font-mono text-parchment-300">
+            <div className="inline-flex items-center gap-2 bg-parchment-100 dark:bg-ink-800 border border-parchment-300 dark:border-ink-600 px-3 py-1.5 rounded-full text-xs font-mono text-ink-700 dark:text-parchment-300">
               <span>Template:</span>
               <strong className="text-brand-400">{lastSubmittedTemplate}</strong>
             </div>
@@ -388,14 +406,15 @@ export default function HomePage() {
 
       </main>
 
-      <footer className="text-center py-6 sm:py-8 border-t border-ink-700">
+      <footer className="text-center py-6 sm:py-8 border-t border-parchment-300 dark:border-ink-700">
         <div className="w-16 h-0.5 bg-brand-700 mx-auto mb-4 rounded-full" />
-        <p className="text-xs font-mono tracking-widest text-ink-200">
-          © 2026{' '}
+        <p className="text-xs font-mono tracking-widest text-ink-500 dark:text-ink-200">
+          Â© 2026{' '}
           <span className="font-semibold text-brand-400">HARKAT NEKATT</span>
-          {' · EST. 2026'}
+          {' Â· EST. 2026'}
         </p>
       </footer>
     </div>
   );
 }
+

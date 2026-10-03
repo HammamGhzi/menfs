@@ -19,8 +19,8 @@
   }
 
   body {
-    /* Near-black background, parchment-tinted teks */
-    @apply font-sans antialiased bg-ink-800 text-parchment-200;
+    /* Light theme by default, dark-mode follows */
+    @apply font-sans antialiased bg-parchment-100 text-ink-900 dark:bg-ink-800 dark:text-parchment-200 transition-colors duration-300;
     overflow-x: hidden;
     /* Cegah teks terlalu kecil di mobile */
     -webkit-text-size-adjust: 100%;
@@ -103,16 +103,16 @@
 
   /* ── Input field ────────────────────────────────────────────────── */
   .input-field {
-    @apply w-full border border-ink-600 rounded-xl px-4 py-3 
-           bg-ink-700 text-parchment-200
+    @apply w-full border border-parchment-300 dark:border-ink-600 rounded-xl px-4 py-3 
+           bg-white dark:bg-ink-700 text-ink-900 dark:text-parchment-200
            focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent
-           placeholder-ink-400
+           placeholder-ink-400 dark:placeholder-ink-400
            transition-all duration-200;
   }
 
   /* ── Card utama: surface gelap sedikit terang dari background ─── */
   .card {
-    @apply bg-ink-700 rounded-2xl border border-ink-600 p-6;
+    @apply bg-white dark:bg-ink-700 rounded-2xl border border-parchment-300 dark:border-ink-600 p-6 transition-colors duration-300;
   }
 
   /* ── Card dengan aksen parchment (hover highlight) ─────────────── */
