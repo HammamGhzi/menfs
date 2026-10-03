@@ -67,7 +67,7 @@ async function getAllMenfes(req, res) {
           approvedAt: true,
           ipHash: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: status === 'APPROVED' ? { approvedAt: 'desc' } : { createdAt: 'desc' },
         skip,
         take: limit,
       }),

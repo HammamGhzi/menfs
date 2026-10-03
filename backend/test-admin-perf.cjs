@@ -275,6 +275,35 @@ const TANDA = 'admin-perf-test';
   const dobel = await getJson('/api/admin/menfes?status=PENDING&status=APPROVED');
   check('status ganda ditolak -> 400', dobel.status === 400, `HTTP ${dobel.status}`);
 
+  console.log('\n== 4c. URUTAN TAB DISETUJUI BY WAKTU DI-ACCEPT ==\n');
+
+  // Tab Disetujui harus mengurutkan by approvedAt (newest-accepted di atas),
+  // bukan createdAt. Maka sengaja dibuat dua baris uji yang urutan createdAt
+  // nya berkebalikan dengan urutan approvedAt nya.
+  const TANDA_APPROVED = `${TANDA}-appr`;
+  const now = Date.now();
+  const m1 = await prisma.menfes.create({
+    data: { message: `${TANDA_APPROVED} a`, status: 'APPROVED',
+      approvedAt: new Date(now - 3000), createdAt: new Date(now - 1000) },
+  });
+  const m2 = await prisma.menfes.create({
+    data: { message: `${TANDA_APPROVED} b`, status: 'APPROVED',
+      approvedAt: new Date(now - 1000), createdAt: new Date(now - 3000) },
+  });
+
+  adminCache.invalidate();
+  const resp = await getJson('/api/admin/menfes?status=APPROVED&limit=50');
+  const tandaRows = resp.body.data.filter((m) => m.message.startsWith(TANDA_APPROVED));
+  const idsByApprovedAt = tandaRows.map((m) => m.id);
+
+  check('dua baris uji muncul di daftar APPROVED', tandaRows.length === 2,
+    `dapat=${tandaRows.length}`);
+  check('tab Disetujui mengurutkan by approvedAt (yang lebih baru di-accept di atas)',
+    idsByApprovedAt[0] === m2.id && idsByApprovedAt[1] === m1.id,
+    idsByApprovedAt.join(','));
+  check('yang datang lebih dulu (m1, di-accept lebih lama) turun ke bawah',
+    tandaRows[tandaRows.length - 1].id === m1.id, idsByApprovedAt.join(','));
+
   console.log('\n== 5. MUTASI MEMBERSIHKAN KEDUA CACHE ==\n');
 
   const row = await buat('PENDING');
