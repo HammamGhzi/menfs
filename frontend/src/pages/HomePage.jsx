@@ -153,7 +153,7 @@ export default function HomePage() {
                   <label className="block text-xs font-semibold text-ink-700 dark:text-parchment-300 font-mono uppercase tracking-widest">
                     Pilih Template Desain
                   </label>
-                  <span className="text-[11px] font-mono text-brand-400 bg-brand-950/70 border border-brand-700/60 px-2.5 py-0.5 rounded-md font-semibold">
+                  <span className="text-[11px] font-mono text-ink-900 dark:text-parchment-100 bg-parchment-200 dark:bg-ink-800 border border-parchment-400 dark:border-ink-600 px-2.5 py-0.5 rounded-md font-semibold">
                     {selectedTemplate.name}
                   </span>
                 </div>
