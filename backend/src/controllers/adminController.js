@@ -19,8 +19,10 @@ function invalidateAll() {
   adminCache.invalidate();
 }
 
-// Status yang dikenal. Nilai lain diabaikan dan diperlakukan sebagai "semua",
-// bukan sebagai error, karena inilah perilaku yang berjalan sejak awal.
+// Status yang dikenal. Nilai lain DITOLAK dengan 400, bukan diam-diam
+// diperlakukan sebagai "semua". Perilaku lama membuat ?status=BOGUS membalas
+// 200 berisi seluruh baris tanpa filter — jawaban yang menyesatkan, seolah
+// permintaan berhasil. Status kosong/absen tetap berarti "tanpa filter".
 const STATUS_TERIMA = ['PENDING', 'APPROVED', 'REJECTED'];
 
 /**
@@ -36,9 +38,18 @@ async function getAllMenfes(req, res) {
     });
     const status = req.query.status; // PENDING | APPROVED | REJECTED
 
-    const where = status && STATUS_TERIMA.includes(status) ? { status } : {};
+    // `status` bisa berupa array kalau parameter diulang di URL
+    // (?status=A&status=B); includes() menolaknya dengan aman.
+    const adaFilter = status !== undefined && status !== '';
+    if (adaFilter && !STATUS_TERIMA.includes(status)) {
+      return res.status(400).json({
+        error: `Status tidak dikenal. Gunakan salah satu dari: ${STATUS_TERIMA.join(', ')}.`,
+      });
+    }
 
-    const key = cacheKey(STATUS_TERIMA.includes(status) ? status : 'ALL', page, limit);
+    const where = adaFilter ? { status } : {};
+
+    const key = cacheKey(adaFilter ? status : 'ALL', page, limit);
     const cached = adminCache.get(key);
     if (cached) return res.json(cached);
 

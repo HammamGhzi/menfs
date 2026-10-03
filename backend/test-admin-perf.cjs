@@ -253,6 +253,28 @@ const TANDA = 'admin-perf-test';
     lewat.body.pagination.totalPages === pg.totalPages,
     `totalPages=${lewat.body.pagination.totalPages} vs ${pg.totalPages}`);
 
+  console.log('\n== 4b. FILTER STATUS TIDAK DIKENAL DITOLAK ==\n');
+
+  // Sebelumnya nilai status yang tidak dikenal diam-diam diperlakukan sebagai
+  // "semua", sehingga ?status=BOGUS mengembalikan seluruh baris tanpa filter
+  // sambil membalas 200 — seolah permintaan itu berhasil. Sekarang ditolak
+  // tegas supaya tidak ada jawaban yang menyesatkan.
+  const bogus = await getJson('/api/admin/menfes?status=BOGUS');
+  check('status tidak dikenal -> 400', bogus.status === 400, `HTTP ${bogus.status}`);
+  check('400 memuat pesan error yang jelas',
+    typeof bogus.body.error === 'string' && bogus.body.error.length > 0,
+    JSON.stringify(bogus.body));
+
+  // status kosong tetap berarti "tanpa filter", bukan error.
+  const kosong = await getJson('/api/admin/menfes?status=');
+  check('status kosong diperlakukan sebagai semua -> 200',
+    kosong.status === 200, `HTTP ${kosong.status}`);
+
+  // Dua parameter status membuat req.query.status jadi array; itu juga bukan
+  // salah satu nilai yang dikenal, jadi harus ditolak, bukan dianggap "semua".
+  const dobel = await getJson('/api/admin/menfes?status=PENDING&status=APPROVED');
+  check('status ganda ditolak -> 400', dobel.status === 400, `HTTP ${dobel.status}`);
+
   console.log('\n== 5. MUTASI MEMBERSIHKAN KEDUA CACHE ==\n');
 
   const row = await buat('PENDING');
