@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { adminAPI } from '../api';
 import ExportModal from '../components/ExportModal';
 import { parseTemplateFromMenfes, getTemplateById } from '../config/templates';
+import { clampPage, paginationItems } from '../utils/pagination.js';
 
 const STATUS_TABS = [
   { key: 'PENDING',  label: 'Menunggu'  },
@@ -16,6 +17,12 @@ function formatDate(iso) {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(new Date(iso));
+}
+
+// Bilah halaman kosong. Dipakai sebagai nilai awal dan saat pindah tab, supaya
+// jumlah halaman dari tab sebelumnya tidak sempat terlihat.
+function paginationKosong() {
+  return { page: 1, limit: 20, total: 0, totalPages: 0 };
 }
 
 function StatusBadge({ status }) {
@@ -40,22 +47,44 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
   const [exportTarget, setExportTarget] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState(paginationKosong);
+
+  // Penjaga urutan permintaan. Klik tab berturut-turut bisa membuat respons
+  // lama tiba setelah respons baru; hanya respons dari permintaan terakhir
+  // yang boleh menyentuh tampilan.
+  const reqSeq = useRef(0);
 
   const loadData = useCallback(async () => {
+    const seq = ++reqSeq.current;
     setLoading(true);
+    let memundurkan = false;
     try {
       const [statsRes, menfesRes] = await Promise.all([
         adminAPI.getStats(),
-        adminAPI.getMenfes(activeTab),
+        adminAPI.getMenfes(activeTab, page),
       ]);
+      if (seq !== reqSeq.current) return;
+      const body = menfesRes.data;
       setStats(statsRes.data);
-      setMenfes(menfesRes.data.data);
+      setMenfes(body.data);
+      setPagination(body.pagination ?? { page, limit: 20, total: body.data.length, totalPages: 1 });
+
+      // Halaman bisa mendadak kosong setelah approve/reject/hapus menghabiskan
+      // baris terakhirnya. Tarik mundur satu halaman; efek akan memuat ulang
+      // dan mengulanginya sampai ada isi atau sampai halaman 1.
+      if (body.data.length === 0 && page > 1) {
+        memundurkan = true;
+        setPage(clampPage(page - 1, body.pagination?.totalPages ?? page - 1));
+      }
     } catch {
-      toast.error('Gagal memuat data.');
+      if (seq === reqSeq.current) toast.error('Gagal memuat data.');
     } finally {
-      setLoading(false);
+      // Saat memundurkan halaman, biarkan status memuat menyala supaya tidak
+      // ada kedipan "tidak ada menfess" untuk halaman yang sebenarnya ada isinya.
+      if (seq === reqSeq.current && !memundurkan) setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, page]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -160,7 +189,12 @@ export default function AdminDashboardPage() {
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => {
+                  if (tab.key === activeTab) return;
+                  setActiveTab(tab.key);
+                  setPage(1);
+                  setPagination(paginationKosong());
+                }}
                 className={`flex-1 py-2.5 sm:py-2 px-1 sm:px-2 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                   activeTab === tab.key
                     ? 'bg-brand-700 text-parchment-100 shadow-sm'
@@ -337,6 +371,49 @@ export default function AdminDashboardPage() {
               </div>
             ))}
           </div>
+        )}
+        {/* ── Paginasi ────────────────────────────────────────────────── */}
+        {pagination.totalPages > 1 && (
+          <nav className="flex items-center justify-center gap-1 pt-1" aria-label="Navigasi halaman">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || loading}
+              aria-label="Halaman sebelumnya"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-ink-700 border border-ink-600 text-ink-300 hover:text-parchment-100 hover:border-ink-500 transition-colors disabled:opacity-40 disabled:hover:text-ink-300 disabled:hover:border-ink-600"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+
+            {paginationItems(page, pagination.totalPages).map((it, i) =>
+              it === '…' ? (
+                <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-ink-400 font-mono text-xs select-none">…</span>
+              ) : (
+                <button
+                  key={it}
+                  onClick={() => setPage(it)}
+                  disabled={loading}
+                  aria-label={`Halaman ${it}`}
+                  aria-current={it === page ? 'page' : undefined}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-mono font-semibold transition-colors disabled:opacity-60 ${
+                    it === page
+                      ? 'bg-brand-700 text-parchment-100 border border-brand-600'
+                      : 'bg-ink-700 border border-ink-600 text-ink-300 hover:text-parchment-100 hover:border-ink-500'
+                  }`}
+                >
+                  {it}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
+              disabled={page >= pagination.totalPages || loading}
+              aria-label="Halaman berikutnya"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-ink-700 border border-ink-600 text-ink-300 hover:text-parchment-100 hover:border-ink-500 transition-colors disabled:opacity-40 disabled:hover:text-ink-300 disabled:hover:border-ink-600"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </nav>
         )}
       </main>
 

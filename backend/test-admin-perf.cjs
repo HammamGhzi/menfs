@@ -234,6 +234,25 @@ const TANDA = 'admin-perf-test';
   check('limit di luar batas dijepit dan tidak menabrak cache lain',
     bad.body.pagination.limit === 50, `limit=${bad.body.pagination.limit}`);
 
+  // Kontrak yang dipakai bilah paginasi di frontend: totalPages konsisten
+  // dengan total/limit, page digemakan, dan halaman di luar rentang
+  // mengembalikan data kosong (itulah yang memicu tarik-mundur halaman).
+  adminCache.invalidate();
+  const kontrak = await getJson('/api/admin/menfes?status=APPROVED&page=1&limit=5');
+  const pg = kontrak.body.pagination;
+  check('pagination.totalPages = ceil(total/limit)',
+    pg.totalPages === Math.ceil(pg.total / pg.limit),
+    `total=${pg.total} limit=${pg.limit} totalPages=${pg.totalPages}`);
+  check('pagination.page menggemakan halaman yang diminta', pg.page === 1, `page=${pg.page}`);
+
+  const lewat = await getJson('/api/admin/menfes?status=APPROVED&page=999&limit=5');
+  check('halaman di luar rentang mengembalikan data kosong',
+    Array.isArray(lewat.body.data) && lewat.body.data.length === 0,
+    `jumlah=${lewat.body.data?.length}`);
+  check('halaman di luar rentang tetap melaporkan totalPages yang benar',
+    lewat.body.pagination.totalPages === pg.totalPages,
+    `totalPages=${lewat.body.pagination.totalPages} vs ${pg.totalPages}`);
+
   console.log('\n== 5. MUTASI MEMBERSIHKAN KEDUA CACHE ==\n');
 
   const row = await buat('PENDING');
