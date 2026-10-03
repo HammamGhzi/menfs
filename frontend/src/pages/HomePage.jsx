@@ -207,24 +207,29 @@ export default function HomePage() {
                 >
                   Pesan Menfess
                 </label>
-                <textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Tulis pesan menfess kamu di sini..."
-                  rows={5}
-                  maxLength={MAX_CHARS}
-                  className="input-field resize-none font-mono text-sm"
-                  disabled={submitting}
-                  aria-label="Isi pesan menfess"
-                  style={{ fontSize: '16px' /* cegah zoom iOS */ }}
-                />
+                <div className="relative">
+                  <textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Tulis pesan menfess kamu di sini..."
+                    rows={5}
+                    maxLength={MAX_CHARS}
+                    className="input-field resize-none font-mono text-sm pb-8"
+                    disabled={submitting}
+                    aria-label="Isi pesan menfess"
+                    style={{ fontSize: '16px' /* cegah zoom iOS */ }}
+                  />
+                  <span className={`absolute right-3 bottom-2 text-[11px] font-mono ${remaining < 50 ? 'text-brand-500 font-bold' : 'text-parchment-400'}`}>
+                    {remaining}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-xs mt-1 font-mono">
                   <span className="text-[11px] text-ink-200">
                     Teks otomatis di-wrap ke template di atas
                   </span>
-                  <span className={remaining < 50 ? 'text-brand-500 font-bold' : 'text-parchment-400'}>
-                    {remaining} karakter tersisa
+                  <span className="text-parchment-400 text-[11px]">
+                    {MAX_CHARS - message.length}/{MAX_CHARS}
                   </span>
                 </div>
               </div>

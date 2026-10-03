@@ -259,10 +259,18 @@ export default function AdminDashboardPage() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-ink-700 border border-ink-600 rounded-xl p-4 sm:p-5 animate-pulse space-y-3">
-                <div className="h-3 bg-ink-600 rounded w-2/3" />
-                <div className="h-3 bg-ink-600 rounded w-1/2" />
-                <div className="h-3 bg-ink-600 rounded w-1/3" />
+              <div key={i} className="bg-ink-700 border border-ink-600 rounded-xl p-4 sm:p-5 animate-pulse">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-20 h-5 bg-ink-600 rounded-full" />
+                  <div className="w-24 h-4 bg-ink-600 rounded" />
+                </div>
+                <div className="h-4 bg-ink-600 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-ink-600 rounded w-1/2 mb-4" />
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-20 bg-ink-600 rounded-lg" />
+                  <div className="h-8 w-20 bg-ink-600 rounded-lg" />
+                  <div className="h-8 w-16 bg-ink-600 rounded-lg ml-auto" />
+                </div>
               </div>
             ))}
           </div>
@@ -349,13 +357,13 @@ export default function AdminDashboardPage() {
                       </p>
                     )}
 
-                    {/* Action bar — scroll horizontal di HP kecil jika penuh */}
-                    <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-ink-700/60">
+                    {/* Action bar — wrap on mobile, horizontal scroll if many */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-1 border-t border-ink-700/60">
                       {item.status !== 'APPROVED' && (
                         <button
                           onClick={() => handleApprove(item.id)}
                           disabled={!!actionLoading}
-                          className="flex items-center gap-1.5 bg-emerald-800 hover:bg-emerald-700 text-parchment-100 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg transition-colors disabled:opacity-50 touch-manipulation"
+                          className="flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-parchment-100 text-[11px] sm:text-xs font-mono font-semibold px-2.5 py-1.5 sm:py-1.5 rounded-lg transition-colors disabled:opacity-50 touch-manipulation"
                         >
                           {actionLoading === item.id + '_approve' ? (
                             <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -369,7 +377,7 @@ export default function AdminDashboardPage() {
                         <button
                           onClick={() => handleReject(item.id)}
                           disabled={!!actionLoading}
-                          className="flex items-center gap-1.5 bg-ink-600 hover:bg-brand-800 text-parchment-300 hover:text-parchment-100 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg border border-ink-500 hover:border-brand-700 transition-colors disabled:opacity-50 touch-manipulation"
+                          className="flex items-center gap-1 bg-ink-600 hover:bg-brand-800 text-parchment-300 hover:text-parchment-100 text-[11px] sm:text-xs font-mono font-semibold px-2.5 py-1.5 sm:py-1.5 rounded-lg border border-ink-500 hover:border-brand-700 transition-colors disabled:opacity-50 touch-manipulation"
                         >
                           {actionLoading === item.id + '_reject' ? (
                             <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -382,7 +390,7 @@ export default function AdminDashboardPage() {
                       {item.status === 'APPROVED' && (
                         <button
                           onClick={() => setExportTarget(item)}
-                          className="flex items-center gap-1.5 bg-ink-600 hover:bg-ink-500 text-parchment-300 text-xs font-mono font-semibold px-3 py-2 sm:py-1.5 rounded-lg border border-ink-500 hover:border-parchment-700/40 transition-colors touch-manipulation"
+                          className="flex items-center gap-1 bg-ink-600 hover:bg-ink-500 text-parchment-300 text-[11px] sm:text-xs font-mono font-semibold px-2.5 py-1.5 sm:py-1.5 rounded-lg border border-ink-500 hover:border-parchment-700/40 transition-colors touch-manipulation"
                         >
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                           Export IG
@@ -393,7 +401,7 @@ export default function AdminDashboardPage() {
                       <button
                         onClick={() => setDeleteTarget(item)}
                         disabled={!!actionLoading}
-                        className="ml-auto flex items-center gap-1 text-xs text-ink-200 hover:text-brand-400 transition-colors font-mono disabled:opacity-40 py-2 sm:py-1 touch-manipulation"
+                        className="ml-auto flex items-center gap-1 text-[11px] sm:text-xs text-ink-200 hover:text-brand-400 transition-colors font-mono disabled:opacity-40 py-1.5 sm:py-1 touch-manipulation"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         Hapus
