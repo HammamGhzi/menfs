@@ -16,6 +16,7 @@ export default function HomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [lastSubmittedTemplate, setLastSubmittedTemplate] = useState('Classic Dark');
+  const [step, setStep] = useState(1);
 
   const selectedTemplate = getTemplateById(selectedTemplateId);
   const remaining = MAX_CHARS - message.length;
@@ -59,7 +60,14 @@ export default function HomePage() {
     setIsAnon(true);
     setSelectedTemplateId('classic');
     setShowPreview(true);
+    setStep(1);
   }
+
+  const stepTitles = {
+    1: 'Pilih Template',
+    2: 'Isi Pesan',
+    3: 'Tampil Sebagai',
+  };
 
   return (
     <div className="min-h-screen bg-ink-800">
@@ -102,8 +110,27 @@ export default function HomePage() {
           <div className="card border-ink-600 p-4 sm:p-6 space-y-5">
             <form onSubmit={handleSubmit} className="space-y-5">
 
+              {/* Mobile wizard steps */}
+              <div className="sm:hidden flex items-center gap-2 mb-4">
+                {[1, 2, 3].map((s) => (
+                  <button
+                    type="button"
+                    key={s}
+                    onClick={() => setStep(s)}
+                    className={`w-8 h-8 rounded-full text-xs font-mono font-bold border transition-colors ${
+                      step === s
+                        ? 'bg-brand-700 border-brand-600 text-parchment-100'
+                        : 'bg-ink-800 border-ink-600 text-ink-300 hover:text-parchment-300'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+                <span className="ml-2 text-xs text-ink-300 font-mono">{stepTitles[step]}</span>
+              </div>
+
               {/* 1. Pilih Template Menfess */}
-              <div className="space-y-2.5">
+              <div className={`space-y-2.5 ${step === 1 ? '' : 'hidden sm:block'}`}>
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
                     Pilih Template Desain
@@ -178,7 +205,7 @@ export default function HomePage() {
               </div>
 
               {/* 2. Pratinjau Langsung Gambar Template Asli */}
-              {showPreview && (
+              {showPreview && step === 1 && (
                 <div className="p-3.5 sm:p-4 rounded-xl bg-ink-900/90 border border-ink-600 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between border-b border-ink-700 pb-2">
                     <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest">
@@ -200,7 +227,7 @@ export default function HomePage() {
               )}
 
               {/* 3. Isi Pesan */}
-              <div>
+              <div className={`${step === 2 ? '' : 'hidden sm:block'}`}>
                 <label
                   htmlFor="message"
                   className="block text-xs font-semibold text-parchment-300 mb-2 font-mono uppercase tracking-widest"
@@ -235,7 +262,7 @@ export default function HomePage() {
               </div>
 
               {/* 4. Pilihan Pengirim */}
-              <div className="space-y-3">
+              <div className={`space-y-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
                 <p className="text-xs font-semibold text-parchment-300 font-mono uppercase tracking-widest">
                   Tampil Sebagai
                 </p>
@@ -288,8 +315,30 @@ export default function HomePage() {
                 )}
               </div>
 
+              {/* Wizard navigation - mobile only */}
+              <div className="flex items-center justify-between sm:hidden pt-2">
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(step - 1)}
+                    className="text-xs font-mono text-ink-300 hover:text-parchment-200"
+                  >
+                    ← Kembali
+                  </button>
+                )}
+                {step < 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(step + 1)}
+                    className="ml-auto px-4 py-2 bg-brand-700 text-parchment-100 text-xs font-mono font-semibold rounded-lg"
+                  >
+                    Lanjut →
+                  </button>
+                )}
+              </div>
+
               {/* Info Privasi */}
-              <div className="bg-ink-800/90 border border-ink-600 rounded-xl p-3">
+              <div className={`bg-ink-800/90 border border-ink-600 rounded-xl p-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
                 <p className="text-xs text-parchment-300 flex items-center gap-2">
                   <svg className="w-4 h-4 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -302,7 +351,7 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={submitting || message.trim().length < 5 || (!isAnon && !senderName.trim())}
-                className="btn-primary w-full text-center font-mono tracking-widest py-3.5 sm:py-3 shadow-lg hover:shadow-brand-900/30 transition-shadow"
+                className={`btn-primary w-full text-center font-mono tracking-widest py-3.5 sm:py-3 shadow-lg hover:shadow-brand-900/30 transition-shadow ${step === 3 ? '' : 'hidden sm:block'}`}
               >
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
