@@ -406,7 +406,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
         {/* ── Paginasi ────────────────────────────────────────────────── */}
-        {pagination.totalPages > 1 && (
+        {pagination.totalPages > 1 && !searchQuery && (
           <nav className="flex items-center justify-center gap-1 pt-1" aria-label="Navigasi halaman">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
