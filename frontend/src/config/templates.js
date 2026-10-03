@@ -31,9 +31,9 @@ export const TEMPLATES = [
       '4:5': { x: 0.085, y: 0.28, w: 0.83, h: 0.44, padX: 0.08, padY: 0.12 },
     },
     defaultSender: {
-      posX: 75,
-      posY: 84,
-      rotate: -8,
+      posX: 73,
+      posY: 83,
+      rotate: -15.5,
       color: 'rgba(255,255,255,0.95)',
       fontFamily: "'Courier New', Courier, monospace",
       fontWeight: 'bold',
@@ -67,7 +67,7 @@ export const TEMPLATES = [
     fontFamily: "'Poppins', sans-serif",
     fontWeight: '600',
     defaultFontSize: 38,
-    defaultFontSizeName: 25,
+    defaultFontSizeName: 28,
     lineHeightMultiplier: 1.5,
     maxLines: 10,
     bounds: {
@@ -75,8 +75,8 @@ export const TEMPLATES = [
       '1:1': { x: 0.13, y: 0.25, w: 0.74, h: 0.50, padX: 0.04, padY: 0.04 },
     },
     defaultSender: {
-      posX: 27.8,
-      posY: 82.2,
+      posX: 27.5,
+      posY: 82.5,
       rotate: 0,
       color: '#ffffff',
       fontFamily: "'Poppins', sans-serif",
