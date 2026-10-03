@@ -1,7 +1,27 @@
 const { audit } = require('../lib/audit');
 const prisma = require('../lib/prisma');
 const cache = require('../lib/menfesCache');
+const adminCache = require('../lib/adminCache');
 const { parsePaging } = require('../lib/paging');
+
+// Kunci cache untuk daftar admin. Status sudah diambil dari daftar putih di
+// bawah dan page serta limit sudah dijepit parsePaging, jadi ruang kuncinya
+// terbatas dan tidak bisa digenomari.
+function cacheKey(status, page, limit) {
+  return `list:${status}:${page}:${limit}`;
+}
+
+// Membersihkan kedua cache. Setiap mutasi mengubah tampilan publik dan isi
+// dashboard admin sekaligus, jadi kalau hanya cache publik yang dibersihkan
+// admin akan melihat data basi selama masa TTL.
+function invalidateAll() {
+  cache.invalidate();
+  adminCache.invalidate();
+}
+
+// Status yang dikenal. Nilai lain diabaikan dan diperlakukan sebagai "semua",
+// bukan sebagai error, karena inilah perilaku yang berjalan sejak awal.
+const STATUS_TERIMA = ['PENDING', 'APPROVED', 'REJECTED'];
 
 /**
  * GET /api/admin/menfes
@@ -16,9 +36,11 @@ async function getAllMenfes(req, res) {
     });
     const status = req.query.status; // PENDING | APPROVED | REJECTED
 
-    const where = status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)
-      ? { status }
-      : {};
+    const where = status && STATUS_TERIMA.includes(status) ? { status } : {};
+
+    const key = cacheKey(STATUS_TERIMA.includes(status) ? status : 'ALL', page, limit);
+    const cached = adminCache.get(key);
+    if (cached) return res.json(cached);
 
     const [menfes, total] = await Promise.all([
       prisma.menfes.findMany({
@@ -52,7 +74,7 @@ async function getAllMenfes(req, res) {
       returned: menfes.length,
     });
 
-    res.json({
+    const body = {
       data: menfes,
       pagination: {
         page,
@@ -60,7 +82,9 @@ async function getAllMenfes(req, res) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    };
+    adminCache.set(key, body);
+    return res.json(body);
   } catch (err) {
     console.error('Admin getAllMenfes error:', err);
     res.status(500).json({ error: 'Gagal mengambil data menfes.' });
@@ -89,7 +113,7 @@ async function approveMenfes(req, res) {
     });
 
     audit('menfes.approve', req, { menfesId: id });
-    cache.invalidate();
+    invalidateAll();
 
     res.json({ message: 'Menfes berhasil diapprove.', data: updated });
   } catch (err) {
@@ -117,7 +141,7 @@ async function rejectMenfes(req, res) {
     });
 
     audit('menfes.reject', req, { menfesId: id });
-    cache.invalidate();
+    invalidateAll();
 
     res.json({ message: 'Menfes berhasil direject.', data: updated });
   } catch (err) {
@@ -142,7 +166,7 @@ async function deleteMenfes(req, res) {
     await prisma.menfes.delete({ where: { id } });
 
     audit('menfes.delete', req, { menfesId: id });
-    cache.invalidate();
+    invalidateAll();
 
     res.json({ message: 'Menfes berhasil dihapus.' });
   } catch (err) {
@@ -157,14 +181,34 @@ async function deleteMenfes(req, res) {
  */
 async function getStats(req, res) {
   try {
-    const [pending, approved, rejected, total] = await Promise.all([
-      prisma.menfes.count({ where: { status: 'PENDING' } }),
-      prisma.menfes.count({ where: { status: 'APPROVED' } }),
-      prisma.menfes.count({ where: { status: 'REJECTED' } }),
-      prisma.menfes.count(),
-    ]);
+    const cached = adminCache.get('stats');
+    if (cached) return res.json(cached);
 
-    res.json({ pending, approved, rejected, total });
+    // Empat count terpisah diubah menjadi satu query. Semuanya dijawab dari
+    // hasil yang sama, dan ukurannya tetap sama persis: jumlah per status
+    // ditambah seluruh baris.
+    //
+    // ::int itu wajib. COUNT(*) di PostgreSQL bertipe bigint, dan bigint tidak
+    // bisa diserialisasi jadi JSON. Tanpa pemotongan ini res.json akan
+    // melempar TypeError setiap kali statistik diminta.
+    const baris = await prisma.$queryRaw`
+      SELECT status, COUNT(*)::int AS n FROM "Menfes" GROUP BY status
+    `;
+
+    let pending = 0;
+    let approved = 0;
+    let rejected = 0;
+    let total = 0;
+    for (const b of baris) {
+      total += b.n;
+      if (b.status === 'PENDING') pending = b.n;
+      else if (b.status === 'APPROVED') approved = b.n;
+      else if (b.status === 'REJECTED') rejected = b.n;
+    }
+
+    const body = { pending, approved, rejected, total };
+    adminCache.set('stats', body);
+    return res.json(body);
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ error: 'Gagal mengambil statistik.' });
