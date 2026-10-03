@@ -48,21 +48,21 @@ export default function TemplatePreview({
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
       {/* Kartu preview fisik */}
-      <div className="w-full max-w-[320px] sm:max-w-[360px] bg-ink-900 border border-ink-600/80 rounded-2xl p-3 shadow-2xl space-y-2.5">
+      <div className="w-full max-w-[320px] sm:max-w-[360px] bg-white dark:bg-ink-900 border border-parchment-300 dark:border-ink-600/80 rounded-2xl p-3 shadow-2xl space-y-2.5">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-mono font-bold text-parchment-200 tracking-wider">
+            <span className="text-[11px] font-mono font-bold text-ink-900 dark:text-parchment-200 tracking-wider">
               {template.name}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-ink-200 bg-ink-800 border border-ink-600 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-mono text-ink-500 dark:text-ink-200 bg-parchment-100 dark:bg-ink-800 border border-parchment-300 dark:border-ink-600 px-2 py-0.5 rounded-full">
             {ratio === '4:5' ? '4:5 Portrait' : '1:1 Square'}
           </span>
         </div>
 
         {/* Canvas Display */}
-        <div className={`w-full ${aspectRatioClass} rounded-xl overflow-hidden bg-black/60 shadow-inner border border-ink-700/60 flex items-center justify-center relative`}>
+        <div className={`w-full ${aspectRatioClass} rounded-xl overflow-hidden bg-parchment-200 dark:bg-black/60 shadow-inner border border-parchment-300 dark:border-ink-700/60 flex items-center justify-center relative`}>
           <canvas
             ref={canvasRef}
             className="w-full h-full object-contain"
@@ -70,7 +70,7 @@ export default function TemplatePreview({
           />
         </div>
 
-        <p className="text-[10px] text-center text-ink-200 font-mono">
+        <p className="text-[10px] text-center text-ink-500 dark:text-ink-200 font-mono">
           Pratinjau langsung sesuai hasil export Instagram
         </p>
       </div>

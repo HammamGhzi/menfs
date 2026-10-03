@@ -169,7 +169,7 @@ export default function HomePage() {
                         className={`relative p-2 rounded-xl border text-left transition-all duration-200 flex flex-col items-center gap-2 group ${
                           isSelected
                             ? 'bg-parchment-100 dark:bg-ink-800 border-brand-500 ring-2 ring-brand-500/40 shadow-xl scale-[1.02]'
-                            : 'bg-white/80 dark:bg-ink-800/80 border-parchment-300 dark:border-ink-600 hover:border-parchment-300 dark:border-ink-500 hover:bg-parchment-200 dark:hover:bg-ink-800 opacity-85 hover:opacity-100'
+                            : 'bg-parchment-100 dark:bg-ink-800/80 border-parchment-400 dark:border-ink-600 hover:border-parchment-400 dark:border-ink-500 hover:bg-parchment-200 dark:hover:bg-ink-800 opacity-85 hover:opacity-100'
                         }`}
                       >
                         {/* Thumbnail image portrait agar terlihat jelas wujud aslinya */}
@@ -200,7 +200,7 @@ export default function HomePage() {
                         {/* Selected badge */}
                         {isSelected && (
                           <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-brand-600 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm">
-                            âœ“
+                            ✓
                           </div>
                         )}
                       </button>
@@ -217,14 +217,14 @@ export default function HomePage() {
                     onClick={() => setShowPreview(!showPreview)}
                     className="text-brand-400 hover:text-brand-300 font-semibold transition-colors flex items-center gap-1 text-[11px] shrink-0 ml-2"
                   >
-                    <span>{showPreview ? 'â–² Sembunyikan Pratinjau' : 'â–¼ Lihat Pratinjau Gambar Asli'}</span>
+                    <span>{showPreview ? '▼ Sembunyikan Pratinjau' : '▶ Lihat Pratinjau Gambar Asli'}</span>
                   </button>
                 </div>
               </div>
 
               {/* 2. Pratinjau Langsung Gambar Template Asli */}
               {showPreview && (step === 1 || step === 2 || step === 3) && (
-                <div className="p-3.5 sm:p-4 rounded-xl bg-white/90 dark:bg-ink-900/90 border border-parchment-300 dark:border-ink-600 space-y-2 animate-fadeIn">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-parchment-100 dark:bg-ink-900/90 border border-parchment-400 dark:border-ink-600 space-y-2 animate-fadeIn">
                   <div className="flex items-center justify-between border-b border-parchment-300 dark:border-ink-700 pb-2">
                     <p className="text-[11px] font-mono font-bold text-ink-700 dark:text-parchment-300 uppercase tracking-widest">
                       Pratinjau Template Nyata ({selectedTemplate.name})
@@ -341,22 +341,22 @@ export default function HomePage() {
                     onClick={() => setStep(step - 1)}
                     className="text-xs font-mono text-ink-400 dark:text-ink-300 hover:text-ink-900 dark:text-parchment-200"
                   >
-                    â† Kembali
+                    ← Kembali
                   </button>
                 )}
                 {step < 3 && (
                   <button
                     type="button"
                     onClick={() => setStep(step + 1)}
-                    className="ml-auto px-4 py-2 bg-brand-700 text-ink-900 dark:text-parchment-100 text-xs font-mono font-semibold rounded-lg"
+                    className="ml-auto px-4 py-2 bg-brand-700 text-white dark:text-parchment-100 text-xs font-mono font-semibold rounded-lg"
                   >
-                    Lanjut â†’
+                    Lanjut →
                   </button>
                 )}
               </div>
 
               {/* Info Privasi */}
-              <div className={`bg-white/80 dark:bg-ink-800/90 border border-parchment-300 dark:border-ink-600 rounded-xl p-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
+              <div className={`bg-parchment-100 dark:bg-ink-800/90 border border-parchment-400 dark:border-ink-600 rounded-xl p-3 ${step === 3 ? '' : 'hidden sm:block'}`}>
                 <p className="text-xs text-ink-700 dark:text-parchment-300 flex items-center gap-2">
                   <svg className="w-4 h-4 shrink-0 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -409,9 +409,9 @@ export default function HomePage() {
       <footer className="text-center py-6 sm:py-8 border-t border-parchment-300 dark:border-ink-700">
         <div className="w-16 h-0.5 bg-brand-700 mx-auto mb-4 rounded-full" />
         <p className="text-xs font-mono tracking-widest text-ink-500 dark:text-ink-200">
-          Â© 2026{' '}
+          © 2026{' '}
           <span className="font-semibold text-brand-400">HARKAT NEKATT</span>
-          {' Â· EST. 2026'}
+          {' · EST. 2026'}
         </p>
       </footer>
     </div>
