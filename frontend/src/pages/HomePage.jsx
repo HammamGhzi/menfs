@@ -76,7 +76,7 @@ export default function HomePage() {
               </span>
             </h1>
           </div>
-          <span className="text-[11px] font-mono text-ink-400 bg-ink-800 border border-ink-600 px-2.5 py-1 rounded-full">
+          <span className="text-[11px] font-mono text-ink-200 bg-ink-800 border border-ink-400 px-2.5 py-1 rounded-full">
             Menfess Kampus
           </span>
         </div>
@@ -336,8 +336,10 @@ export default function HomePage() {
 
       <footer className="text-center py-6 sm:py-8 border-t border-ink-700">
         <div className="w-16 h-0.5 bg-brand-700 mx-auto mb-4 rounded-full" />
-        <p className="text-xs text-ink-500 font-mono tracking-widest">
-          © 2026 HARKAT NEKATT · EST. 2026
+        <p className="text-xs font-mono tracking-widest text-ink-200">
+          © 2026{' '}
+          <span className="font-semibold text-brand-400">HARKAT NEKATT</span>
+          {' · EST. 2026'}
         </p>
       </footer>
     </div>

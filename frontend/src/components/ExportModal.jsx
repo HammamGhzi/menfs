@@ -377,7 +377,7 @@ export default function ExportModal({ menfes, onClose }) {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-ink-500 mt-1 font-mono">
+              <p className="text-xs text-ink-200 mt-1 font-mono">
                 {ratio === '1:1' ? '1080 × 1080 (Square)' : '1080 × 1350 (Portrait)'}
               </p>
             </div>
@@ -396,7 +396,7 @@ export default function ExportModal({ menfes, onClose }) {
                 onChange={(e) => setFontSize(Number(e.target.value))}
                 className="w-full accent-brand-600 mt-1 h-5"
               />
-              <div className="flex justify-between text-xs text-ink-500 mt-0.5 font-mono">
+              <div className="flex justify-between text-xs text-ink-200 mt-0.5 font-mono">
                 <span>Kecil</span>
                 <span>Besar</span>
               </div>
@@ -417,7 +417,7 @@ export default function ExportModal({ menfes, onClose }) {
               onChange={(e) => setFontSizeName(Number(e.target.value))}
               className="w-full accent-brand-600 h-5"
             />
-            <div className="flex justify-between text-xs text-ink-500 mt-0.5 font-mono">
+            <div className="flex justify-between text-xs text-ink-200 mt-0.5 font-mono">
               <span>Kecil</span>
               <span>Besar</span>
             </div>
@@ -541,7 +541,7 @@ export default function ExportModal({ menfes, onClose }) {
               />
             </div>
 
-            <p className="text-[10px] text-ink-500 font-mono">
+            <p className="text-[10px] text-ink-200 font-mono">
               Diukur dari titik tengah blok teks, bukan tepi kiri. Teks boleh menjulur keluar
               kertas — naikkan "Teks Pesan" dulu kalau mau lebih kecil.
             </p>
@@ -549,7 +549,7 @@ export default function ExportModal({ menfes, onClose }) {
 
           {/* Pesan preview */}
           <div className="bg-ink-800 border border-ink-600 rounded-xl p-3">
-            <p className="text-[10px] font-mono font-bold text-ink-500 mb-1.5 tracking-widest uppercase">Isi Pesan</p>
+            <p className="text-[10px] font-mono font-bold text-ink-200 mb-1.5 tracking-widest uppercase">Isi Pesan</p>
             <p className="text-sm text-parchment-300 line-clamp-3 font-mono leading-relaxed break-words">
               <span className="text-brand-600">"</span>{menfes.message}<span className="text-brand-600">"</span>
             </p>

@@ -85,7 +85,7 @@ export default function MenfesCard() {
                 {/* Footer: tanggal */}
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-ink-700">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-700 shrink-0" aria-hidden="true" />
-                  <p className="text-xs text-ink-500 font-mono">
+                  <p className="text-xs text-ink-200 font-mono">
                     {formatDate(item.approvedAt || item.createdAt)}
                   </p>
                 </div>

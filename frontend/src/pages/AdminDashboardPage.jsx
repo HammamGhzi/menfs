@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
                 HARKAT <span className="text-brand-500">NEKATT</span>
               </span>
             </div>
-            <span className="text-ink-500 font-mono text-xs hidden sm:inline shrink-0">/ Admin</span>
+            <span className="text-ink-200 font-mono text-xs hidden sm:inline shrink-0">/ Admin</span>
           </div>
 
           {/* Right */}
@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
           </div>
         ) : menfes.length === 0 ? (
           <div className="bg-ink-700 border border-ink-600 rounded-xl py-12 sm:py-16 text-center">
-            <svg className="w-10 h-10 text-ink-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-10 h-10 text-ink-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
             <p className="text-ink-400 font-mono text-sm">Tidak ada menfess di kategori ini.</p>
@@ -223,7 +223,7 @@ export default function AdminDashboardPage() {
                     {/* Header row: status + tanggal */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <StatusBadge status={item.status} />
-                      <span className="text-[10px] sm:text-xs text-ink-500 font-mono">{formatDate(item.createdAt)}</span>
+                      <span className="text-[10px] sm:text-xs text-ink-200 font-mono">{formatDate(item.createdAt)}</span>
                     </div>
 
                     {/* Pesan */}
@@ -253,7 +253,7 @@ export default function AdminDashboardPage() {
                       return (
                         <div className="bg-ink-800 border border-ink-600 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-mono font-bold text-ink-500 tracking-widest uppercase">
+                            <p className="text-[10px] font-mono font-bold text-ink-200 tracking-widest uppercase">
                               Info Pengirim
                             </p>
                             <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-ink-700 border-ink-500 text-parchment-300">
@@ -273,11 +273,11 @@ export default function AdminDashboardPage() {
                     })()}
 
                     {!item.senderName && !item.senderInfo && (
-                      <p className="text-xs text-ink-500 font-mono italic">Dari Seseorang · Classic</p>
+                      <p className="text-xs text-ink-200 font-mono italic">Dari Seseorang · Classic</p>
                     )}
 
                     {item.approvedAt && (
-                      <p className="text-xs text-ink-500 font-mono">
+                      <p className="text-xs text-ink-200 font-mono">
                         Disetujui: {formatDate(item.approvedAt)}
                       </p>
                     )}
@@ -326,7 +326,7 @@ export default function AdminDashboardPage() {
                       <button
                         onClick={() => handleDelete(item.id)}
                         disabled={!!actionLoading}
-                        className="ml-auto flex items-center gap-1 text-xs text-ink-500 hover:text-brand-400 transition-colors font-mono disabled:opacity-40 py-2 sm:py-1 touch-manipulation"
+                        className="ml-auto flex items-center gap-1 text-xs text-ink-200 hover:text-brand-400 transition-colors font-mono disabled:opacity-40 py-2 sm:py-1 touch-manipulation"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         Hapus

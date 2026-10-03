@@ -184,7 +184,7 @@ export default function AdminLoginPage() {
         <p className="text-center mt-5 sm:mt-6">
           <a
             href="/"
-            className="text-ink-500 hover:text-parchment-300 transition-colors font-mono text-xs tracking-wider py-2 inline-block"
+            className="text-ink-200 hover:text-parchment-300 transition-colors font-mono text-xs tracking-wider py-2 inline-block"
           >
             ← KEMBALI KE BERANDA
           </a>
