@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
 const { isCurrentStamp } = require('../lib/token');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 /**
  * Middleware: Verifikasi JWT token dari header Authorization

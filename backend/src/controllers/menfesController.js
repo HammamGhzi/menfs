@@ -1,8 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
 const crypto = require('crypto');
 const { notifyNewMenfes } = require('../services/telegramBot');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const cache = require('../lib/menfesCache');
+const { parsePaging } = require('../lib/paging');
 
 /**
  * Hash IP address untuk anti-spam tanpa menyimpan IP asli
@@ -71,26 +71,38 @@ async function submitMenfes(req, res) {
  */
 async function getApprovedMenfes(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(20, parseInt(req.query.limit) || 10);
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = parsePaging(req.query, {
+      defaultLimit: 10,
+      maxLimit: 20,
+      maxPage: 100,
+    });
 
-    const [menfes, total] = await Promise.all([
-      prisma.menfes.findMany({
-        where: { status: 'APPROVED' },
-        select: {
-          id: true,
-          message: true,
-          approvedAt: true,
-          createdAt: true,
-          // senderName, senderInfo, ipHash TIDAK diambil
-        },
-        orderBy: { approvedAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      prisma.menfes.count({ where: { status: 'APPROVED' } }),
-    ]);
+    // Halaman 1 di-cache supaya jalur publik tidak menyentuh database.
+    let cached = page === 1 ? cache.get(limit) : undefined;
+
+    let menfes;
+    let total;
+    if (cached) {
+      ({ menfes, total } = cached);
+    } else {
+      [menfes, total] = await Promise.all([
+        prisma.menfes.findMany({
+          where: { status: 'APPROVED' },
+          select: {
+            id: true,
+            message: true,
+            approvedAt: true,
+            createdAt: true,
+            // senderName, senderInfo, ipHash TIDAK diambil
+          },
+          orderBy: { approvedAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+        prisma.menfes.count({ where: { status: 'APPROVED' } }),
+      ]);
+      if (page === 1) cache.set(limit, { menfes, total });
+    }
 
     res.json({
       data: menfes,

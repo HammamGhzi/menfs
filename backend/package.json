@@ -18,7 +18,8 @@
     "test:audit": "node test-audit.cjs",
     "test:password-length": "node test-password-length.cjs",
     "test:revocation": "node test-token-revocation.cjs",
-    "test:all": "npm run security-check && npm run test:audit && npm run test:password-length && npm run test:revocation",
+    "test:perf": "node test-perf-cache.cjs",
+    "test:all": "npm run security-check && npm run test:audit && npm run test:password-length && npm run test:revocation && npm run test:perf",
     "prove:bcrypt-truncation": "node scripts/prove-bcrypt-truncation.cjs",
     "prove:token-revocation": "node scripts/prove-token-revocation.cjs",
     "sec:forensics": "node sec-forensics.mjs"

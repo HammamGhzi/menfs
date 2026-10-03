@@ -1,7 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
 const { audit } = require('../lib/audit');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
+const cache = require('../lib/menfesCache');
+const { parsePaging } = require('../lib/paging');
 
 /**
  * GET /api/admin/menfes
@@ -9,9 +9,11 @@ const prisma = new PrismaClient();
  */
 async function getAllMenfes(req, res) {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.min(50, parseInt(req.query.limit) || 20);
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = parsePaging(req.query, {
+      defaultLimit: 20,
+      maxLimit: 50,
+      maxPage: 100,
+    });
     const status = req.query.status; // PENDING | APPROVED | REJECTED
 
     const where = status && ['PENDING', 'APPROVED', 'REJECTED'].includes(status)
@@ -87,6 +89,7 @@ async function approveMenfes(req, res) {
     });
 
     audit('menfes.approve', req, { menfesId: id });
+    cache.invalidate();
 
     res.json({ message: 'Menfes berhasil diapprove.', data: updated });
   } catch (err) {
@@ -114,6 +117,7 @@ async function rejectMenfes(req, res) {
     });
 
     audit('menfes.reject', req, { menfesId: id });
+    cache.invalidate();
 
     res.json({ message: 'Menfes berhasil direject.', data: updated });
   } catch (err) {
@@ -138,6 +142,7 @@ async function deleteMenfes(req, res) {
     await prisma.menfes.delete({ where: { id } });
 
     audit('menfes.delete', req, { menfesId: id });
+    cache.invalidate();
 
     res.json({ message: 'Menfes berhasil dihapus.' });
   } catch (err) {

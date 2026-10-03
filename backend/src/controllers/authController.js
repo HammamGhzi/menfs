@@ -1,5 +1,4 @@
 const bcrypt = require('bcryptjs');
-const { PrismaClient } = require('@prisma/client');
 const { audit, auditSecurity } = require('../lib/audit');
 const { issueToken } = require('../lib/token');
 const {
@@ -9,7 +8,7 @@ const {
   exceedsBcryptLimit,
 } = require('../lib/password');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 /**
  * POST /api/auth/login

@@ -1,10 +1,9 @@
 const express = require('express');
 const crypto = require('crypto');
-const { PrismaClient } = require('@prisma/client');
 const { getBot, sendMessage } = require('../services/telegramBot');
+const prisma = require('../lib/prisma');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const rateLimit = require('express-rate-limit');
 
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
