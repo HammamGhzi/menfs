@@ -9,6 +9,7 @@ const {
 } = require('../lib/password');
 
 const prisma = require('../lib/prisma');
+const authCache = require('../lib/authCache');
 
 /**
  * POST /api/auth/login
@@ -150,6 +151,12 @@ async function changePassword(req, res) {
       select: { id: true, username: true, updatedAt: true },
     });
 
+    // updatedAt baru berarti cap `st` yang lama sudah basi. Cache auth di
+    // proses ini harus dibuang SEKARANG, bukan menunggu TTL: kalau tidak,
+    // token lama masih dilayani dari cache sampai TTL habis di instance yang
+    // baru saja mengganti password. Ini yang membuat uji revokasi tetap lulus.
+    authCache.invalidate();
+
     // Catat dengan panjang, bukan isinya, supaya rotasi bisa dibuktikan
     // terjadi tanpa menyalin password ke log.
     audit('auth.password_changed', req, {
@@ -192,6 +199,10 @@ async function logout(req, res) {
       data: { username: req.admin.username },
       select: { id: true },
     });
+
+    // Sama seperti ganti password: cap revokasi baru harus langsung terasa di
+    // proses ini, jadi cache auth dibuang tanpa menunggu TTL.
+    authCache.invalidate();
 
     auditSecurity('logout', req, { allSessionsRevoked: true });
 

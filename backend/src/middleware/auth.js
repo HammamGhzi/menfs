@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { isCurrentStamp } = require('../lib/token');
 
 const prisma = require('../lib/prisma');
+const authCache = require('../lib/authCache');
 
 /**
  * Middleware: Verifikasi JWT token dari header Authorization
@@ -26,6 +27,15 @@ const prisma = require('../lib/prisma');
  * Fail-closed: kalau database tidak bisa dibaca, request DITOLAK. Membuka
  * akses hanya karena database sedang lambat berarti membiarkan middleware
  * dilewati sepenuhnya.
+ *
+ * CACHE
+ *
+ * Query baris Admin di bawah adalah sisa biaya terbesar per request admin
+ * (~365ms). Hasilnya di-cache pendek (src/lib/authCache.js), jadi request
+ * berikutnya dalam jendela TTL tidak menyentuh database. Ganti password dan
+ * logout membersihkan cache itu di proses ini seketika. Perubahan dari proses
+ * lain baru terlihat paling lama setelah TTL habis; itulah batas yang
+ * disengaja, dan tradeoff-nya dijelaskan di modul cache.
  */
 async function authMiddleware(req, res, next) {
   let decoded;
@@ -61,19 +71,25 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Token tidak valid.' });
   }
 
-  let admin;
-  try {
-    admin = await prisma.admin.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, username: true, createdAt: true, updatedAt: true },
-    });
-  } catch (err) {
-    // Fail-closed: database tidak terbaca berarti sesi tidak bisa diverifikasi,
-    // dan request ini tidak boleh lewat.
-    console.error('Auth DB error:', err);
-    return res.status(503).json({
-      error: 'Verifikasi sesi gagal sementara. Coba lagi sebentar.',
-    });
+  let admin = authCache.get(decoded.id);
+  if (!admin) {
+    try {
+      admin = await prisma.admin.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, username: true, createdAt: true, updatedAt: true },
+      });
+    } catch (err) {
+      // Fail-closed: database tidak terbaca berarti sesi tidak bisa diverifikasi,
+      // dan request ini tidak boleh lewat.
+      console.error('Auth DB error:', err);
+      return res.status(503).json({
+        error: 'Verifikasi sesi gagal sementara. Coba lagi sebentar.',
+      });
+    }
+
+    // Baris yang tidak ada tidak di-cache: jawabannya sudah 401 di bawah, dan
+    // admin yang dibuat belakangan harus langsung bisa masuk.
+    if (admin) authCache.set(decoded.id, admin);
   }
 
   if (!admin) {
