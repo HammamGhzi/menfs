@@ -56,7 +56,7 @@ export default function TemplatePreview({
               {template.name}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-ink-400 bg-ink-800 border border-ink-600 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-mono text-ink-200 bg-ink-800 border border-ink-600 px-2 py-0.5 rounded-full">
             {ratio === '4:5' ? '4:5 Portrait' : '1:1 Square'}
           </span>
         </div>
@@ -70,7 +70,7 @@ export default function TemplatePreview({
           />
         </div>
 
-        <p className="text-[10px] text-center text-ink-400 font-mono">
+        <p className="text-[10px] text-center text-ink-200 font-mono">
           Pratinjau langsung sesuai hasil export Instagram
         </p>
       </div>

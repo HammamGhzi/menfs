@@ -41,7 +41,7 @@ export default function MenfesCard() {
       {/* Section header */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-ink-600" />
-        <h3 className="font-mono text-xs text-ink-400 uppercase tracking-[0.2em] sm:tracking-[0.25em] shrink-0">
+        <h3 className="font-mono text-xs text-ink-200 uppercase tracking-[0.2em] sm:tracking-[0.25em] shrink-0">
           Menfess Terbaru
         </h3>
         <div className="h-px flex-1 bg-ink-600" />
@@ -59,7 +59,7 @@ export default function MenfesCard() {
         </div>
       ) : menfes.length === 0 ? (
         <div className="card text-center py-10 border-ink-600">
-          <p className="text-sm text-ink-400 font-mono">Belum ada menfess yang disetujui.</p>
+          <p className="text-sm text-ink-200 font-mono">Belum ada menfess yang disetujui.</p>
         </div>
       ) : (
         <>

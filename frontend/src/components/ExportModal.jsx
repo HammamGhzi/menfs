@@ -252,7 +252,7 @@ export default function ExportModal({ menfes, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="text-ink-400 hover:text-parchment-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-ink-600 transition-colors touch-manipulation"
+            className="text-ink-300 hover:text-parchment-200 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-ink-600 transition-colors touch-manipulation"
             aria-label="Tutup"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -370,7 +370,7 @@ export default function ExportModal({ menfes, onClose }) {
                     className={`flex-1 py-2 text-sm font-mono font-semibold rounded-lg border transition-all touch-manipulation ${
                       ratio === r
                         ? 'bg-brand-700 text-parchment-100 border-brand-700'
-                        : 'bg-ink-800 text-ink-400 border-ink-600 hover:border-ink-500 hover:text-parchment-300'
+                        : 'bg-ink-800 text-ink-200 border-ink-600 hover:border-ink-500 hover:text-parchment-300'
                     }`}
                   >
                     {r}
@@ -439,7 +439,7 @@ export default function ExportModal({ menfes, onClose }) {
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Kiri ← X → Kanan</span>
                 <span className="text-parchment-400">{posX}%</span>
               </div>
@@ -455,7 +455,7 @@ export default function ExportModal({ menfes, onClose }) {
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Atas ↑ Y ↓ Bawah</span>
                 <span className="text-parchment-400">{posY}%</span>
               </div>
@@ -471,7 +471,7 @@ export default function ExportModal({ menfes, onClose }) {
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Rotasi Teks ↺</span>
                 <span className="text-parchment-400">{rotate}°</span>
               </div>
@@ -494,7 +494,7 @@ export default function ExportModal({ menfes, onClose }) {
             </p>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Kiri ← X → Kanan</span>
                 <span className="text-parchment-400">{msgX}%</span>
               </div>
@@ -510,7 +510,7 @@ export default function ExportModal({ menfes, onClose }) {
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Atas ↑ Y ↓ Bawah</span>
                 <span className="text-parchment-400">{msgY}%</span>
               </div>
@@ -526,7 +526,7 @@ export default function ExportModal({ menfes, onClose }) {
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-mono text-ink-400 mb-1">
+              <div className="flex justify-between text-xs font-mono text-ink-200 mb-1">
                 <span>Rotasi ↺</span>
                 <span className="text-parchment-400">{msgRotate}°</span>
               </div>

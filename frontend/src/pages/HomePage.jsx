@@ -184,7 +184,7 @@ export default function HomePage() {
                     <p className="text-[11px] font-mono font-bold text-parchment-300 uppercase tracking-widest">
                       Pratinjau Template Nyata ({selectedTemplate.name})
                     </p>
-                    <span className="text-[10px] font-mono text-ink-400">
+                    <span className="text-[10px] font-mono text-ink-200">
                       Live Canvas
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export default function HomePage() {
                   style={{ fontSize: '16px' /* cegah zoom iOS */ }}
                 />
                 <div className="flex items-center justify-between text-xs mt-1 font-mono">
-                  <span className="text-[11px] text-ink-400">
+                  <span className="text-[11px] text-ink-200">
                     Teks otomatis di-wrap ke template di atas
                   </span>
                   <span className={remaining < 50 ? 'text-brand-500 font-bold' : 'text-parchment-400'}>

@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
               NEKATT
             </span>
           </div>
-          <p className="text-ink-400 font-mono text-xs mt-3 tracking-[0.3em] uppercase">
+          <p className="text-ink-200 font-mono text-xs mt-3 tracking-[0.3em] uppercase">
             Panel Admin
           </p>
           <div className="flex items-center gap-3 mt-4 sm:mt-5">
@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-parchment-300 transition-colors p-1 -mr-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-300 hover:text-parchment-300 transition-colors p-1 -mr-1"
                   aria-label={showPass ? 'Sembunyikan password' : 'Tampilkan password'}
                 >
                   {showPass ? (

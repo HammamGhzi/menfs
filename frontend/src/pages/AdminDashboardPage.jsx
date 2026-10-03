@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
             </div>
             <button
               onClick={logout}
-              className="flex items-center gap-1.5 text-xs font-mono text-ink-400 hover:text-brand-400 transition-colors border border-ink-700 hover:border-brand-700/50 px-2.5 sm:px-3 py-1.5 rounded-lg"
+              className="flex items-center gap-1.5 text-xs font-mono text-ink-200 hover:text-brand-400 transition-colors border border-ink-700 hover:border-brand-700/50 px-2.5 sm:px-3 py-1.5 rounded-lg"
             >
               <svg className="w-3.5 h-3.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
@@ -176,7 +176,7 @@ export default function AdminDashboardPage() {
               <div className={`w-1.5 sm:w-2 h-7 sm:h-8 rounded-full ${s.dot} opacity-80 shrink-0`} />
               <div className="min-w-0">
                 <div className={`text-xl sm:text-2xl font-extrabold font-mono leading-none ${s.accent}`}>{s.value}</div>
-                <div className="text-[10px] sm:text-xs text-ink-400 font-mono mt-0.5 truncate">{s.label}</div>
+                <div className="text-[10px] sm:text-xs text-ink-200 font-mono mt-0.5 truncate">{s.label}</div>
               </div>
             </div>
           ))}
@@ -198,7 +198,7 @@ export default function AdminDashboardPage() {
                 className={`flex-1 py-2.5 sm:py-2 px-1 sm:px-2 rounded-lg text-xs font-mono font-semibold tracking-wide transition-all flex items-center justify-center gap-1 sm:gap-1.5 ${
                   activeTab === tab.key
                     ? 'bg-brand-700 text-parchment-100 shadow-sm'
-                    : 'text-ink-400 hover:text-parchment-300 hover:bg-ink-800'
+                    : 'text-ink-200 hover:text-parchment-300 hover:bg-ink-800'
                 }`}
               >
                 {tab.label}
@@ -216,7 +216,7 @@ export default function AdminDashboardPage() {
             onClick={loadData}
             disabled={loading}
             title="Refresh"
-            className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-ink-700 border border-ink-600 text-ink-400 hover:text-parchment-200 hover:border-ink-500 transition-all shrink-0"
+            className="w-9 h-9 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-ink-700 border border-ink-600 text-ink-300 hover:text-parchment-200 hover:border-ink-500 transition-all shrink-0"
           >
             <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -240,7 +240,7 @@ export default function AdminDashboardPage() {
             <svg className="w-10 h-10 text-ink-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
-            <p className="text-ink-400 font-mono text-sm">Tidak ada menfess di kategori ini.</p>
+            <p className="text-ink-200 font-mono text-sm">Tidak ada menfess di kategori ini.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -386,7 +386,7 @@ export default function AdminDashboardPage() {
 
             {paginationItems(page, pagination.totalPages).map((it, i) =>
               it === '…' ? (
-                <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-ink-400 font-mono text-xs select-none">…</span>
+                <span key={`e${i}`} className="w-8 h-8 flex items-center justify-center text-ink-300 font-mono text-xs select-none">…</span>
               ) : (
                 <button
                   key={it}
