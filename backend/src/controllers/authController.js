@@ -2,6 +2,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const { audit, auditSecurity } = require('../lib/audit');
+const {
+  MAX_PASSWORD_BYTES,
+  MIN_PASSWORD_LENGTH,
+  byteLength,
+  exceedsBcryptLimit,
+} = require('../lib/password');
 
 const prisma = new PrismaClient();
 
@@ -20,6 +26,25 @@ async function login(req, res) {
 
     if (typeof username !== 'string' || typeof password !== 'string') {
       return res.status(400).json({ error: 'Input tidak valid.' });
+    }
+
+    // bcrypt hanya membaca 72 byte pertama dan membuang sisanya tanpa error.
+    // Menolak input yang lebih panjang di sini memastikan batas yang
+    // diverifikasi sama dengan batas yang di-hash, sekaligus menahan string
+    // raksasa sebelum masuk ke bcrypt.
+    //
+    // Catatan: ini tidak mengunci siapa pun. Password admin saat ini
+    // (admin123) hanya 8 byte, dan change-password sudah menolak > 72 byte
+    // sejak sebelum guard ini ada, jadi tidak ada akun yang bisa terjebak di
+    // keadaan "hash-nya terpotong".
+    if (exceedsBcryptLimit(password)) {
+      auditSecurity('login.rejected_too_long', req, {
+        username: username.trim().slice(0, 64),
+        bytes: byteLength(password),
+      });
+      return res.status(400).json({
+        error: `Password maksimal ${MAX_PASSWORD_BYTES} byte.`,
+      });
     }
 
     // Cari admin di database
@@ -102,8 +127,18 @@ async function changePassword(req, res) {
       return res.status(400).json({ error: 'Password lama dan baru wajib diisi.' });
     }
 
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'Password baru minimal 8 karakter.' });
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      return res.status(400).json({ error: `Password baru minimal ${MIN_PASSWORD_LENGTH} karakter.` });
+    }
+
+    // bcrypt memotong input di 72 byte tanpa error, jadi "rahasia" dan
+    // "rahasia-tambahan-apa-saja" menghasilkan hash yang sama. Tolak yang
+    // kelewat panjang agar bagian yang benar-benar dipakai saat verifikasi
+    // sama dengan bagian yang benar-benar di-hash.
+    if (exceedsBcryptLimit(newPassword)) {
+      return res.status(400).json({
+        error: `Password baru maksimal ${MAX_PASSWORD_BYTES} byte.`,
+      });
     }
 
     const admin = await prisma.admin.findUnique({

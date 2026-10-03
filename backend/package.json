@@ -16,6 +16,9 @@
     "security-check": "node scripts/security-check.cjs",
     "scan-secrets": "node scripts/scan-secrets.cjs",
     "test:audit": "node test-audit.cjs",
+    "test:password-length": "node test-password-length.cjs",
+    "test:all": "npm run security-check && npm run test:audit && npm run test:password-length",
+    "prove:bcrypt-truncation": "node scripts/prove-bcrypt-truncation.cjs",
     "sec:forensics": "node sec-forensics.mjs"
   },
   "dependencies": {
