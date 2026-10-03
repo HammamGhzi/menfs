@@ -57,6 +57,18 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // ─── Serve uploaded template ──────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// /api/health dipasang SEBELUM rate limiter supaya health check Render selalu
+// mendapat 200 saat service sehat; sebelumnya route ini ikut kena globalLimiter
+// dan bisa membalas 429, yang membuat Render menandai service unhealthy.
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'Menfes Harkat Nekat',
+    telegram: !!process.env.TELEGRAM_BOT_TOKEN,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // ─── Global Rate Limit ────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -72,16 +84,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menfes', menfesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/telegram', telegramRouter);
-
-// ─── Health Check ─────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    app: 'Menfes Harkat Nekat',
-    telegram: !!process.env.TELEGRAM_BOT_TOKEN,
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
