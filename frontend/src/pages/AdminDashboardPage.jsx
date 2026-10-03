@@ -52,6 +52,7 @@ export default function AdminDashboardPage() {
   const [deleteTarget, setDeleteTarget] = useState(null); // Custom confirm modal
   const [searchQuery, setSearchQuery] = useState(''); // Client-side search filter
   const [hoveredId, setHoveredId] = useState(null); // Untuk keyboard shortcuts
+  const [selectedIds, setSelectedIds] = useState(new Set()); // Untuk bulk action
 
   // Penjaga urutan permintaan. Klik tab berturut-turut bisa membuat respons
   // lama tiba setelah respons baru; hanya respons dari permintaan terakhir
@@ -280,6 +281,67 @@ export default function AdminDashboardPage() {
           Hover card + tekan <span className="text-brand-400">A</span>=Approve <span className="text-brand-400">R</span>=Reject <span className="text-brand-400">D</span>=Hapus <span className="text-brand-400">E</span>=Export
         </p>
 
+        {/* Bulk action bar — muncul saat ada item terpilih */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center justify-between bg-ink-900/70 border border-ink-700 rounded-xl px-4 py-2.5">
+            <span className="text-xs font-mono text-parchment-300">
+              {selectedIds.size} item terpilih
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  // bulk approve semua yang terpilih & status bukan APPROVED
+                  const toApprove = [...selectedIds].filter((id) => {
+                    const m = menfes.find((x) => x.id === id);
+                    return m && m.status !== 'APPROVED';
+                  });
+                  if (toApprove.length === 0) return toast.error('Tidak ada item yang bisa diapprove.');
+                  Promise.all(toApprove.map((id) => adminAPI.approve(id)))
+                    .then(() => { toast.success(`${toApprove.length} item diapprove.`); setSelectedIds(new Set()); loadData(); })
+                    .catch(() => toast.error('Gagal approve beberapa item.'));
+                }}
+                className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-parchment-100 text-[11px] sm:text-xs font-mono font-semibold rounded-lg transition-colors"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => {
+                  const toReject = [...selectedIds].filter((id) => {
+                    const m = menfes.find((x) => x.id === id);
+                    return m && m.status !== 'APPROVED';
+                  });
+                  if (toReject.length === 0) return toast.error('Tidak ada item yang bisa direject.');
+                  Promise.all(toReject.map((id) => adminAPI.reject(id)))
+                    .then(() => { toast.success(`${toReject.length} item direject.`); setSelectedIds(new Set()); loadData(); })
+                    .catch(() => toast.error('Gagal reject beberapa item.'));
+                }}
+                className="px-3 py-1.5 bg-ink-600 hover:bg-brand-800 text-parchment-300 hover:text-parchment-100 text-[11px] sm:text-xs font-mono font-semibold rounded-lg transition-colors"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => {
+                  const toDelete = [...selectedIds];
+                  if (toDelete.length === 0) return;
+                  if (!window.confirm(`Yakin hapus ${toDelete.length} menfess permanen?`)) return;
+                  Promise.all(toDelete.map((id) => adminAPI.delete(id)))
+                    .then(() => { toast.success(`${toDelete.length} item dihapus.`); setSelectedIds(new Set()); loadData(); })
+                    .catch(() => toast.error('Gagal hapus beberapa item.'));
+                }}
+                className="px-3 py-1.5 bg-ink-600 hover:bg-brand-900 text-ink-200 hover:text-brand-400 text-[11px] sm:text-xs font-mono font-semibold rounded-lg transition-colors"
+              >
+                Hapus
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="px-3 py-1.5 bg-transparent text-ink-300 text-[11px] sm:text-xs font-mono transition-colors"
+              >
+                Batal Pilih
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── List ────────────────────────────────────────────────────── */}
         {loading ? (
           <div className="space-y-3">
@@ -318,7 +380,20 @@ export default function AdminDashboardPage() {
                 className={`bg-ink-700 border rounded-xl overflow-hidden transition-colors group ${hoveredId === item.id ? 'border-brand-600 ring-1 ring-brand-600/60' : 'border-ink-600 hover:border-ink-500'}`}
               >
                 <div className="flex">
-                  {/* Accent strip kiri */}
+                  {/* Checkbox + Accent strip kiri */}
+                  <div className="flex items-start gap-2 p-3 sm:p-5 border-r border-ink-700/60">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(item.id)}
+                      onChange={(e) => {
+                        const next = new Set(selectedIds);
+                        if (e.target.checked) next.add(item.id);
+                        else next.delete(item.id);
+                        setSelectedIds(next);
+                      }}
+                      className="mt-1 w-4 h-4 accent-brand-700 bg-ink-800 border-ink-500 rounded"
+                    />
+                  </div>
                   <div className="w-1 bg-brand-700 shrink-0 group-hover:bg-brand-600 transition-colors" />
 
                   <div className="flex-1 p-3 sm:p-5 space-y-3 min-w-0">
