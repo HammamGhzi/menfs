@@ -51,6 +51,7 @@ export default function AdminDashboardPage() {
   const [pagination, setPagination] = useState(paginationKosong);
   const [deleteTarget, setDeleteTarget] = useState(null); // Custom confirm modal
   const [searchQuery, setSearchQuery] = useState(''); // Client-side search filter
+  const [hoveredId, setHoveredId] = useState(null); // Untuk keyboard shortcuts
 
   // Penjaga urutan permintaan. Klik tab berturut-turut bisa membuat respons
   // lama tiba setelah respons baru; hanya respons dari permintaan terakhir
@@ -89,6 +90,25 @@ export default function AdminDashboardPage() {
   }, [activeTab, page]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Keyboard shortcuts (aksi pada card yang sedang di-hover/terakhir di-touch)
+  useEffect(() => {
+    function handleKey(e) {
+      if (deleteTarget || exportTarget) return; // kalau ada modal, jangan shortcut
+      if (hoveredId == null) return;
+      const item = menfes.find((m) => m.id === hoveredId);
+      if (!item) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+      const k = e.key.toLowerCase();
+      if (k === 'a' && item.status !== 'APPROVED') { e.preventDefault(); handleApprove(item.id); }
+      else if (k === 'r' && item.status !== 'APPROVED') { e.preventDefault(); handleReject(item.id); }
+      else if (k === 'e' && item.status === 'APPROVED') { e.preventDefault(); setExportTarget(item); }
+      else if (k === 'd') { e.preventDefault(); setDeleteTarget(item); }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [hoveredId, menfes, deleteTarget, exportTarget]);
 
   async function handleApprove(id) {
     setActionLoading(id + '_approve');
@@ -255,6 +275,11 @@ export default function AdminDashboardPage() {
           />
         </div>
 
+        {/* Hint untuk shortcut */}
+        <p className="text-[10px] sm:text-xs text-ink-300 font-mono text-right -mt-2">
+          Hover card + tekan <span className="text-brand-400">A</span>=Approve <span className="text-brand-400">R</span>=Reject <span className="text-brand-400">D</span>=Hapus <span className="text-brand-400">E</span>=Export
+        </p>
+
         {/* ── List ────────────────────────────────────────────────────── */}
         {loading ? (
           <div className="space-y-3">
@@ -288,7 +313,9 @@ export default function AdminDashboardPage() {
             {filteredMenfes.map((item) => (
               <div
                 key={item.id}
-                className="bg-ink-700 border border-ink-600 rounded-xl overflow-hidden hover:border-ink-500 transition-colors group"
+                onMouseEnter={() => setHoveredId(item.id)}
+                onMouseLeave={() => setHoveredId((prev) => (prev === item.id ? null : prev))}
+                className={`bg-ink-700 border rounded-xl overflow-hidden transition-colors group ${hoveredId === item.id ? 'border-brand-600 ring-1 ring-brand-600/60' : 'border-ink-600 hover:border-ink-500'}`}
               >
                 <div className="flex">
                   {/* Accent strip kiri */}
